@@ -1,6 +1,6 @@
 ﻿namespace smartcontract;
 
-public class SmartContract
+public unsafe class SmartContract
 {
 
 }
