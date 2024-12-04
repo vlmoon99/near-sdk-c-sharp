@@ -1,0 +1,9 @@
+package smartcontract:component;
+
+world smartcontract {
+  export HelloWolrd: func();
+
+    import "env" {
+    log_utf8: func(param1: i64, param2: i64) -> never;
+  }
+}
