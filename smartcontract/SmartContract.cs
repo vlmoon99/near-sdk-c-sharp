@@ -28,7 +28,7 @@ namespace smartcontract
 
         [WasmImportLinkage]
         [DllImport("env", EntryPoint = "log-utf8")]
-        public static extern void LogUtf8(long param1, long param2);
+        public static extern long LogUtf8(long param1, long param2);
     }
 
     public unsafe static class SmartContract
