@@ -1,44 +1,96 @@
-In order to make basic compilation use ->
+# Main Goal - Create Proof of Concept "Smart Contract" compiled from C# for Near Blokchain 
+
+# What alredy achived :
+# 1.Small size of wasm
+# 2.Clear "env" imports
+# 3.Pass serilazition
+
+# What we need t oachive in order t oprint hello world in Blockchain Console
+
+# 1.Pass Deserialization problem 
+# 2.Optimize our wasm for nearcore(nearcore - it's name of the near node which are connected to each other and this nodes craete blockchain , there also we have all wasm uplaoding process and validation as well)
+
+
+# How to produce what we have now , how we can test it , etc
+
+## 1.Understand the structure of the repository :
+```
+1. smartcontract folder - it's c# .net project which we compile to the wasm
+2. test-wasm - it's rust project wherein we use near_workspaces package in order to upload our wasm to the blockchain in emulation mode , but we will ahve all possible errors and return results as we do this on real blockchain.
 
 ```
 
+# 2.Compile smart contract process
+```
 cd smartcontract
+
+Create stubs for our wasm file using clang++ from wasi sdk
+
+/wasi-sdk-24.0-x86_64-linux/bin/clang++ stubs.cpp -o stubs.o -c
 
 dotnet publish -r wasi-wasm /p:DebugType=none /p:InvariantGlobalization=true /p:OptimizationPreference=Size /p:StackTraceSupport=false
 
+This cmd's give us small size wasi component , after that we need to unbundle it because Near Blockchain dont support wasi components , only clear wasm modules
 
-home/vlmoon99/wasi/wasi-sdk-24.0-x86_64-linux/bin/clang++ stubs.cpp -o stubs.o -c
+wasm-tools component unbundle smartcontract.wasm --module-dir ./
 
-  (table (;0;) 735 735 funcref)
-  (memory (;0;) 19 32768)
-  (global (;0;) (mut i32) i32.const 1215344)
-  (global (;1;) i32 i32.const 0)
-  (global (;2;) i32 i32.const 145704)
-  (global (;3;) i32 i32.const 145692)
-  (global (;4;) i32 i32.const 164036)
-  (export "memory" (memory 0))
-  (export "_initialize" (func 10))
-  (export "cabi_realloc" (func 2447))
+~/dev/near-sdk-c-sharp/smartcontract/bin/Release/net9.0/wasi-wasm/publish$ pwd
+
+/home/user/dev/near-sdk-c-sharp/smartcontract/bin/Release/net9.0/wasi-wasm/publish
+
+~/dev/near-sdk-c-sharp/smartcontract/bin/Release/net9.0/wasi-wasm/publish$ ls
+
+smartcontract.deps.json  smartcontract.wasm  unbundled-module0.wasm
+
+unbundled-module0.wasm - it's our clean wasm component
+
+But it's not the end, and the problem is - near blockchain has imports like "log_utf8" , but in .wit format wwherein we provide our "imports" and "exports", we can't use udnerscore "_" , so now we can only transform our wasm component to wat , chage "-" to "_" mannualy and make wat2wasm conversion
+
+wasm2wat unbundled-module0.wasm -o test.wat
+
+wat2wasm test.wat -o test.wasm
+
+After this manipulatio nwe have ready to go wasm file with clear imports which pass first prepare checking on the Near Blockchain , but still failed on deserialization
+
+status: Failure(ActionError(ActionError { index: Some(0), kind: FunctionCallError(CompilationError(PrepareError(Deserialization))) })),
 
 
-  (table (;0;) 64 64 funcref)
-  (memory (;0;) 17)
-  (global (;0;) (mut i32) i32.const 1048576)
-  (global (;1;) i32 i32.const 1072465)
-  (global (;2;) i32 i32.const 1072480)
-  (export "memory" (memory 0))
-  (export "contract_source_metadata" (func 137))
-  (export "set_status" (func 140))
-  (export "get_status" (func 149))
-  (export "__data_end" (global 1))
-  (export "__heap_base" (global 2))
+```
+
+# 3.Discover Near RS and JS SDK , Nearcore
+
+```
+
+1. Near core m it's main blockchain node which will process our wasm file 
+
+https://github.com/near/nearcore
+
+
+It's wherein our wasm verification process is located -->
+
+https://github.com/near/nearcore/tree/master/runtime/near-vm-runner/src/prepare
+
+2. Near SDK JS
+Works in a way when JS -> C -> WASM
+
+
+https://github.com/near/near-sdk-js/tree/develop
+
+https://github.com/near/near-sdk-js/blob/develop/packages/near-sdk-js/builder/builder.c
+
+
+3.Near SDK RS 
+
+Compile it usign native rust compiler
+
+https://github.com/near/near-sdk-rs
 
 
 ```
 
 
-Near core config
-
+# Near core config
+```
 {
     "id": "dontcare",
     "jsonrpc": "2.0",
@@ -413,3 +465,4 @@ Near core config
         "transaction_validity_period": 86400
     }
 }
+```
