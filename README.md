@@ -1,3 +1,4 @@
+# If u want to contribute write me on telegram @vlmoon99
 # Main Goal - Create Proof of Concept "Smart Contract" compiled from C# for Near Blokchain 
 
 # What alredy achived :
