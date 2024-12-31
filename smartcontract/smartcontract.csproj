@@ -25,7 +25,7 @@
 
   <ItemGroup>
     <NativeLibrary Include="stubs.o" />
-    <CustomLinkerArg Include="-Wl,--component-type $(MSBuildProjectDirectory)/smartcontract.wit" />
+    <CustomLinkerArg Include="-Wl,--component-type D:/near-sdk-c/near-sdk-c-sharp/smartcontract/smartcontract.wit" />
   </ItemGroup>
 
 

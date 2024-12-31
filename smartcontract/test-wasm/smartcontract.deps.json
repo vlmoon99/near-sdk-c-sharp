@@ -1,0 +1,72 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v9.0/wasi-wasm",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v9.0": {},
+    ".NETCoreApp,Version=v9.0/wasi-wasm": {
+      "smartcontract/1.0.0": {
+        "dependencies": {
+          "Microsoft.DotNet.ILCompiler.LLVM": "10.0.0-alpha.1.24623.1",
+          "Microsoft.NET.ILLink.Tasks": "9.0.0",
+          "runtime.win-x64.Microsoft.DotNet.ILCompiler.LLVM": "10.0.0-alpha.1.24623.1"
+        },
+        "runtime": {
+          "smartcontract.dll": {}
+        }
+      },
+      "Microsoft.DotNet.ILCompiler.LLVM/10.0.0-alpha.1.24623.1": {
+        "dependencies": {
+          "runtime.wasi-wasm.Microsoft.DotNet.ILCompiler.LLVM": "10.0.0-alpha.1.24623.1"
+        }
+      },
+      "Microsoft.NET.ILLink.Tasks/9.0.0": {},
+      "runtime.wasi-wasm.Microsoft.DotNet.ILCompiler.LLVM/10.0.0-alpha.1.24623.1": {},
+      "runtime.win-x64.Microsoft.DotNet.ILCompiler.LLVM/10.0.0-alpha.1.24623.1": {}
+    }
+  },
+  "libraries": {
+    "smartcontract/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.DotNet.ILCompiler.LLVM/10.0.0-alpha.1.24623.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-asItnlEBP81FDuR6EaMaxwcby3E/9PdGorBGVfoQLvxB5ygvtoRP2E5XVIi1hE7dVFWtgdBjaHwdwXAxVkp12A==",
+      "path": "microsoft.dotnet.ilcompiler.llvm/10.0.0-alpha.1.24623.1",
+      "hashPath": "microsoft.dotnet.ilcompiler.llvm.10.0.0-alpha.1.24623.1.nupkg.sha512"
+    },
+    "Microsoft.NET.ILLink.Tasks/9.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-zAwp213evC3UkimtVXRb+Dlgc/40QG145nmZDtp2LO9zJJMfrp+i/87BnXN7tRXEA4liyzdFkjqG1HE8/RPb4A==",
+      "path": "microsoft.net.illink.tasks/9.0.0",
+      "hashPath": "microsoft.net.illink.tasks.9.0.0.nupkg.sha512"
+    },
+    "runtime.wasi-wasm.Microsoft.DotNet.ILCompiler.LLVM/10.0.0-alpha.1.24623.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-DAK2lITqOjb1I399UISujLS+ygdY7yKhe3C05SMENcWJ+e0Jpr3mKf3cKc/2UhwBsREKbUiiXf+p/23YNGCzOA==",
+      "path": "runtime.wasi-wasm.microsoft.dotnet.ilcompiler.llvm/10.0.0-alpha.1.24623.1",
+      "hashPath": "runtime.wasi-wasm.microsoft.dotnet.ilcompiler.llvm.10.0.0-alpha.1.24623.1.nupkg.sha512"
+    },
+    "runtime.win-x64.Microsoft.DotNet.ILCompiler.LLVM/10.0.0-alpha.1.24623.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-7WbWT9vo7tmaDbePKFzmXcw5B+yeeYG4uW+cpnrrAHIJ5FkKuSmIL2G0a6jPGkSoX1C1I+H40K7e3y3XdbB4zg==",
+      "path": "runtime.win-x64.microsoft.dotnet.ilcompiler.llvm/10.0.0-alpha.1.24623.1",
+      "hashPath": "runtime.win-x64.microsoft.dotnet.ilcompiler.llvm.10.0.0-alpha.1.24623.1.nupkg.sha512"
+    }
+  },
+  "runtimes": {
+    "wasi-wasm": [
+      "wasi",
+      "any",
+      "base"
+    ]
+  }
+}
