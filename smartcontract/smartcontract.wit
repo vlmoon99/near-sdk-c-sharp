@@ -4,6 +4,6 @@ world smartcontract {
   export helloworld: func();
 
   import env: interface {
-    log-utf8: func(param1: s64, param2: s64) -> s64;
+    log-utf8: func(param1: s64, param2: s64);
   }
 }

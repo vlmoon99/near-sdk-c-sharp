@@ -1,3 +1,14 @@
+Test with near CLI
+
+```
+near contract deploy test.near use-file ./test.wasm with-init-call _initialize json-args {} prepaid-gas '100.0 Tgas' attached-deposit '0 NEAR' network-config localnet sign-with-access-key-file ./test.near.json send
+
+near contract deploy test.near use-file ./test.wasm with-init-call helloworld json-args {} prepaid-gas '100.0 Tgas' attached-deposit '0 NEAR' network-config localnet sign-with-access-key-file ./test.near.json send
+
+
+```
+
+
 # If u want to contribute write me on telegram @vlmoon99
 # Main Goal - Create Proof of Concept "Smart Contract" compiled from C# for Near Blokchain 
 

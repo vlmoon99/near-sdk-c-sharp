@@ -15,7 +15,7 @@ namespace smartcontract
         public static extern long StorageWrite(long param1, long param2, long param3, long param4, long param5);
 
         [WasmImportLinkage]
-        [DllImport("env", EntryPoint = "storage-has_key")]
+        [DllImport("env", EntryPoint = "storage-has-key")]
         public static extern long StorageHasKey(long param1, long param2);
 
         [WasmImportLinkage]
@@ -28,7 +28,7 @@ namespace smartcontract
 
         [WasmImportLinkage]
         [DllImport("env", EntryPoint = "log-utf8")]
-        public static extern long LogUtf8(long param1, long param2);
+        public static extern void LogUtf8(long param1, long param2);
     }
 
     public unsafe static class SmartContract
