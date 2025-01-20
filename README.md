@@ -1,469 +1,207 @@
-# If u want to contribute write me on telegram @vlmoon99
-# Main Goal - Create Proof of Concept "Smart Contract" compiled from C# for Near Blokchain 
+# If u want to contribute write me on :
+```
+Telegram : @vlmoon99 or @vlmoon77
+Discord : @vlad_mykolaienko
+Twitter : @vlmoon99
+Gmail : vlmoon.near@gmail.com
+```
+# Main Goal Of This Project 
+```
+Create Proof of Concept "Smart Contract" compiled from C# for Near Blokchain  and call log("Hello World") on the blockchain side
+```
+# What already achived
+```
+1.Small size of wasm.
+2.Clear "env" imports.
+3.Pass serilazition.
+4.Pass deserilazition on wasmtime runtime + enabled bulk memmory on the host machine.
+5.Be able to call smart contract (but with unreachable code for now , and it's a main problem). 
+```
 
-# What alredy achived :
-# 1.Small size of wasm
-# 2.Clear "env" imports
-# 3.Pass serilazition
-
-# What we need t oachive in order t oprint hello world in Blockchain Console
-
-# 1.Pass Deserialization problem 
-# 2.Optimize our wasm for nearcore(nearcore - it's name of the near node which are connected to each other and this nodes craete blockchain , there also we have all wasm uplaoding process and validation as well)
-
-
-# How to produce what we have now , how we can test it , etc
-
-## 1.Understand the structure of the repository :
+# Understand the structure of the repository :
 ```
 1. smartcontract folder - it's c# .net project which we compile to the wasm
-2. test-wasm - it's rust project wherein we use near_workspaces package in order to upload our wasm to the blockchain in emulation mode , but we will ahve all possible errors and return results as we do this on real blockchain.
-
+2. test-wasm 
+(Currenty we can't use it for test, because we cant enable bulk memmory support there, it's possible only inside nearcore aka Near Blockchain Node) 
+- it's rust project where we use near_workspaces package in order to upload our wasm to the blockchain in emulation mode , but we will have all possible errors and return results as we do this on real blockchain.
 ```
-
-# 2.Compile smart contract process
+# How to compile and test the smart contract (Simple using mocks and wasmtime)
 ```
+1. Download and install : .net 9.0, wasi 24 or 25 version, rust
+
+2. Go to the smartcontract folder : 
+
 cd smartcontract
 
-Create stubs for our wasm file using clang++ from wasi sdk
+3. Create stubs for our wasm file using clang++ from wasi sdk (It's important to use clang++ from wasi folder) :
 
 /wasi-sdk-24.0-x86_64-linux/bin/clang++ stubs.cpp -o stubs.o -c
 
+We stubs our wasi import from env in order to pass serialization when smart contract is uploading on the Blockchain
+
+4. Run build using nativeaot-llvm .net compiler and produce our optimized wasm file which is less than 1mb in size :
+
 dotnet publish -r wasi-wasm /p:DebugType=none /p:InvariantGlobalization=true /p:OptimizationPreference=Size /p:StackTraceSupport=false
 
-This cmd's give us small size wasi component , after that we need to unbundle it because Near Blockchain dont support wasi components , only clear wasm modules
+
+5.Unbundle our outcome "smartcontract.wasm" because Near Blockchain doesn't support wasi components , only clear wasm modules
 
 wasm-tools component unbundle smartcontract.wasm --module-dir ./
 
-~/dev/near-sdk-c-sharp/smartcontract/bin/Release/net9.0/wasi-wasm/publish$ pwd
-
-/home/user/dev/near-sdk-c-sharp/smartcontract/bin/Release/net9.0/wasi-wasm/publish
-
-~/dev/near-sdk-c-sharp/smartcontract/bin/Release/net9.0/wasi-wasm/publish$ ls
+This command will produce -> 
 
 smartcontract.deps.json  smartcontract.wasm  unbundled-module0.wasm
 
 unbundled-module0.wasm - it's our clean wasm component
 
-But it's not the end, and the problem is - near blockchain has imports like "log_utf8" , but in .wit format wwherein we provide our "imports" and "exports", we can't use udnerscore "_" , so now we can only transform our wasm component to wat , chage "-" to "_" mannualy and make wat2wasm conversion
+
+6.But it's not the end, and the problem is - near blockchain has imports like "log_utf8" , but in .wit format where we provide our "imports" and "exports", we can't use underscore "_" , so now we can only transform our wasm component to wat , chage "-" to "_" mannualy and make wat2wasm conversion
 
 wasm2wat unbundled-module0.wasm -o test.wat
 
+Make hand transformation(in a future we will create an automatic script but now we can only make it by our hands)
+
 wat2wasm test.wat -o test.wasm
 
-After this manipulatio nwe have ready to go wasm file with clear imports which pass first prepare checking on the Near Blockchain , but still failed on deserialization
 
-status: Failure(ActionError(ActionError { index: Some(0), kind: FunctionCallError(CompilationError(PrepareError(Deserialization))) })),
+7. In order to test wasm file in "lite mode" we can use near-sdk-c-sharp/smartcontract/test-wasm/testwasm.ipynb wherein we will use wasmtime runtime which is used in Near Blockchain , so we can mock our "env" methods
+and see if there will be some errors, if there no errors - we can go to the advance testing and up and running our local Near Blockchain Node.
 
-
-```
-
-# 3.Discover Near RS and JS SDK , Nearcore
 
 ```
+# How to compile and test the smart contract (Advance using Local Node)
+```
+1. Download and install : .net 9.0, wasi 24 or 25 version, rust
 
+2. Go to the smartcontract folder : 
+
+cd smartcontract
+
+3. Create stubs for our wasm file using clang++ from wasi sdk (It's important to use clang++ from wasi folder) :
+
+/wasi-sdk-24.0-x86_64-linux/bin/clang++ stubs.cpp -o stubs.o -c
+
+We stubs our wasi import from env in order to pass serialization when smart contract is uploading on the Blockchain
+
+4. Run build using nativeaot-llvm .net compiler and produce our optimized wasm file which is less than 1mb in size :
+
+dotnet publish -r wasi-wasm /p:DebugType=none /p:InvariantGlobalization=true /p:OptimizationPreference=Size /p:StackTraceSupport=false
+
+
+5.Unbundle our outcome "smartcontract.wasm" because Near Blockchain doesn't support wasi components , only clear wasm modules
+
+wasm-tools component unbundle smartcontract.wasm --module-dir ./
+
+This command will produce -> 
+
+smartcontract.deps.json  smartcontract.wasm  unbundled-module0.wasm
+
+unbundled-module0.wasm - it's our clean wasm component
+
+
+6.But it's not the end, and the problem is - near blockchain has imports like "log_utf8" , but in .wit format where we provide our "imports" and "exports", we can't use underscore "_" , so now we can only transform our wasm component to wat , chage "-" to "_" mannualy and make wat2wasm conversion
+
+wasm2wat unbundled-module0.wasm -o test.wat
+
+Make hand transformation(in a future we will create an automatic script but now we can only make it by our hands)
+
+wat2wasm test.wat -o test.wasm
+
+
+7.Our wasm is ready for uploading it to the blockchain for testing, now we need to clone nearcore repositoty which is represents Near Blockchain Node
+
+git clone https://github.com/near/nearcore
+
+Last release was 2.4.0, so we need to make checkout on this version
+
+git checkout 2.4.0
+
+8.Go to the nearcore directory and change the settings in order to enable bulk memmory support + enable wasitime enviroment by default,
+I created a git patch with all necessary changes in order to see all necessary logs and enable wasitime runtime and memmory bulk support
+
+cd nearcore
+
+git apply csharpsdk.patch
+
+9.After we have all necessary changes insdie nearcore repo , we can start to build our Near Blockchain node, we will do it locally on our PC :
+
+cargo build --release (Release) 
+or 
+cargo build (Debug)
+
+In process of building this node you can have a lot of errors, but they can happen only in two way's - you dont have some necessary build dependecy (clang,make,build-essentials, etc) or you will not have enough memmory for compilation
+
+If you dont have enough memmory for compilation - create swap with 40G of memmory, it help me on my laptop (24gb ram) , while on 128g ram workstation I build it without any swap.
+
+10.We will need to initialize our node and make test run before we will upload our smartcontract there
+
+cd /nearcore/target/release (If we build node in release mode)
+
+or
+
+cd /nearcore/target/debug  (If we build node in debug mode)
+
+./neard init - this will init all necessary configs in order to run node localy 
+./neard run - this cmd will run our local node
+
+
+
+11.Now we are ready to start our node , but before it we need to create near acocunt using near rust cli.
+
+Download and run Near CLI :
+
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/near/near-cli-rs/releases/latest/download/near-cli-rs-installer.sh | sh
+
+After we have CLI we need to setup our cli in order to be able to connect to our local node:
+
+cd ~/.config/near-cli
+
+nano config.toml
+
+Add this , or if there will be some config - change it to your localhost - http://127.0.0.1:3030
+
+[network_connection.localnet]
+network_name = "localnet"
+rpc_url = "http://127.0.0.1:3030"
+wallet_url = "https://app.mynearwallet.com/"
+explorer_transaction_url = "https://explorer.near.org/transactions/"
+
+
+12.After we init our local node, setup cli in order to call this local node , we will need to take keys in order to sing tx and send it to the local node
+
+cd ~/.near/
+
+in this folder we will have the file validator_key.json
+
+We will need to copy all data in new file call test.near.json + we need to add new key "secret_key" with value of private key , it will be necessary for cli in order to sign tx (You can find an example in smartcontract/test-wasm/test.near.json , but there a keys from my local node, pls take it into account), after we will create this file we can tranfer it to our smartcontract/test-wasm folder (take into account that there alredy some keys with the same names - you will need to delete it before moving your keys).
+
+
+13. Test our wasm file
+
+After we have all necessary files inside near-sdk-c-sharp/smartcontract/test-wasm, we can start to test it local 
+
+near contract deploy test.near use-file ./test.wasm with-init-call new json-args {} prepaid-gas '100.0 Tgas' attached-deposit '0 NEAR' network-config localnet sign-with-access-key-file test.near.json send
+
+```
+# Discover Near Blockchain SDK, API which can be helpful in creating SDK on C#
+```
 1. Near core m it's main blockchain node which will process our wasm file 
 
 https://github.com/near/nearcore
 
 
-It's wherein our wasm verification process is located -->
-
-https://github.com/near/nearcore/tree/master/runtime/near-vm-runner/src/prepare
-
 2. Near SDK JS
 Works in a way when JS -> C -> WASM
-
 
 https://github.com/near/near-sdk-js/tree/develop
 
 https://github.com/near/near-sdk-js/blob/develop/packages/near-sdk-js/builder/builder.c
 
-
 3.Near SDK RS 
 
-Compile it usign native rust compiler
+Compile it using native rust compiler
 
 https://github.com/near/near-sdk-rs
 
 
-```
-
-
-# Near core config
-```
-{
-    "id": "dontcare",
-    "jsonrpc": "2.0",
-    "result": {
-        "avg_hidden_validator_seats_per_shard": [
-            0,
-            0,
-            0,
-            0,
-            0,
-            0
-        ],
-        "block_producer_kickout_threshold": 80,
-        "chain_id": "testnet",
-        "chunk_producer_kickout_threshold": 80,
-        "chunk_validator_only_kickout_threshold": 70,
-        "dynamic_resharding": false,
-        "epoch_length": 43200,
-        "fishermen_threshold": "340282366920938463463374607431768211455",
-        "gas_limit": 1000000000000000,
-        "gas_price_adjustment_rate": [
-            1,
-            100
-        ],
-        "genesis_height": 42376888,
-        "genesis_time": "2020-07-31T03:39:42.911378Z",
-        "max_gas_price": "10000000000000000000000",
-        "max_inflation_rate": [
-            1,
-            20
-        ],
-        "max_kickout_stake_perc": 30,
-        "min_gas_price": "5000",
-        "minimum_stake_divisor": 10,
-        "minimum_stake_ratio": [
-            1,
-            62500
-        ],
-        "minimum_validators_per_shard": 1,
-        "num_block_producer_seats": 20,
-        "num_block_producer_seats_per_shard": [
-            20,
-            20,
-            20,
-            20,
-            20,
-            20
-        ],
-        "num_blocks_per_year": 31536000,
-        "num_chunk_only_producer_seats": 0,
-        "online_max_threshold": [
-            99,
-            100
-        ],
-        "online_min_threshold": [
-            90,
-            100
-        ],
-        "protocol_reward_rate": [
-            1,
-            10
-        ],
-        "protocol_treasury_account": "near",
-        "protocol_upgrade_stake_threshold": [
-            4,
-            5
-        ],
-        "protocol_version": 73,
-        "runtime_config": {
-            "account_creation_config": {
-                "min_allowed_top_level_account_length": 65,
-                "registrar_account_id": "registrar"
-            },
-            "congestion_control_config": {
-                "allowed_shard_outgoing_gas": 1000000000000000,
-                "max_congestion_incoming_gas": 400000000000000000,
-                "max_congestion_memory_consumption": 1000000000,
-                "max_congestion_missed_chunks": 5,
-                "max_congestion_outgoing_gas": 10000000000000000,
-                "max_outgoing_gas": 300000000000000000,
-                "max_tx_gas": 500000000000000,
-                "min_outgoing_gas": 1000000000000000,
-                "min_tx_gas": 20000000000000,
-                "outgoing_receipts_big_size_limit": 4718592,
-                "outgoing_receipts_usual_size_limit": 102400,
-                "reject_tx_congestion_threshold": 0.8
-            },
-            "storage_amount_per_byte": "10000000000000000000",
-            "transaction_costs": {
-                "action_creation_config": {
-                    "add_key_cost": {
-                        "full_access_cost": {
-                            "execution": 101765125000,
-                            "send_not_sir": 101765125000,
-                            "send_sir": 101765125000
-                        },
-                        "function_call_cost": {
-                            "execution": 102217625000,
-                            "send_not_sir": 102217625000,
-                            "send_sir": 102217625000
-                        },
-                        "function_call_cost_per_byte": {
-                            "execution": 1925331,
-                            "send_not_sir": 47683715,
-                            "send_sir": 1925331
-                        }
-                    },
-                    "create_account_cost": {
-                        "execution": 3850000000000,
-                        "send_not_sir": 3850000000000,
-                        "send_sir": 3850000000000
-                    },
-                    "delegate_cost": {
-                        "execution": 200000000000,
-                        "send_not_sir": 200000000000,
-                        "send_sir": 200000000000
-                    },
-                    "delete_account_cost": {
-                        "execution": 147489000000,
-                        "send_not_sir": 147489000000,
-                        "send_sir": 147489000000
-                    },
-                    "delete_key_cost": {
-                        "execution": 94946625000,
-                        "send_not_sir": 94946625000,
-                        "send_sir": 94946625000
-                    },
-                    "deploy_contract_cost": {
-                        "execution": 184765750000,
-                        "send_not_sir": 184765750000,
-                        "send_sir": 184765750000
-                    },
-                    "deploy_contract_cost_per_byte": {
-                        "execution": 64572944,
-                        "send_not_sir": 47683715,
-                        "send_sir": 6812999
-                    },
-                    "function_call_cost": {
-                        "execution": 780000000000,
-                        "send_not_sir": 200000000000,
-                        "send_sir": 200000000000
-                    },
-                    "function_call_cost_per_byte": {
-                        "execution": 2235934,
-                        "send_not_sir": 47683715,
-                        "send_sir": 2235934
-                    },
-                    "stake_cost": {
-                        "execution": 102217625000,
-                        "send_not_sir": 141715687500,
-                        "send_sir": 141715687500
-                    },
-                    "transfer_cost": {
-                        "execution": 115123062500,
-                        "send_not_sir": 115123062500,
-                        "send_sir": 115123062500
-                    }
-                },
-                "action_receipt_creation_config": {
-                    "execution": 108059500000,
-                    "send_not_sir": 108059500000,
-                    "send_sir": 108059500000
-                },
-                "burnt_gas_reward": [
-                    3,
-                    10
-                ],
-                "data_receipt_creation_config": {
-                    "base_cost": {
-                        "execution": 36486732312,
-                        "send_not_sir": 36486732312,
-                        "send_sir": 36486732312
-                    },
-                    "cost_per_byte": {
-                        "execution": 17212011,
-                        "send_not_sir": 47683715,
-                        "send_sir": 17212011
-                    }
-                },
-                "pessimistic_gas_price_inflation_ratio": [
-                    103,
-                    100
-                ],
-                "storage_usage_config": {
-                    "num_bytes_account": 100,
-                    "num_extra_bytes_record": 40
-                }
-            },
-            "wasm_config": {
-                "alt_bn128": true,
-                "disable_9393_fix": false,
-                "discard_custom_sections": true,
-                "ed25519_verify": true,
-                "eth_implicit_accounts": true,
-                "ext_costs": {
-                    "alt_bn128_g1_multiexp_base": 713000000000,
-                    "alt_bn128_g1_multiexp_element": 320000000000,
-                    "alt_bn128_g1_sum_base": 3000000000,
-                    "alt_bn128_g1_sum_element": 5000000000,
-                    "alt_bn128_pairing_check_base": 9686000000000,
-                    "alt_bn128_pairing_check_element": 5102000000000,
-                    "base": 264768111,
-                    "bls12381_g1_multiexp_base": 16500000000,
-                    "bls12381_g1_multiexp_element": 930000000000,
-                    "bls12381_g2_multiexp_base": 18600000000,
-                    "bls12381_g2_multiexp_element": 1995000000000,
-                    "bls12381_map_fp2_to_g2_base": 1500000000,
-                    "bls12381_map_fp2_to_g2_element": 900000000000,
-                    "bls12381_map_fp_to_g1_base": 1500000000,
-                    "bls12381_map_fp_to_g1_element": 252000000000,
-                    "bls12381_p1_decompress_base": 15000000000,
-                    "bls12381_p1_decompress_element": 81000000000,
-                    "bls12381_p1_sum_base": 16500000000,
-                    "bls12381_p1_sum_element": 6000000000,
-                    "bls12381_p2_decompress_base": 15000000000,
-                    "bls12381_p2_decompress_element": 165000000000,
-                    "bls12381_p2_sum_base": 18600000000,
-                    "bls12381_p2_sum_element": 15000000000,
-                    "bls12381_pairing_base": 2130000000000,
-                    "bls12381_pairing_element": 2130000000000,
-                    "contract_compile_base": 0,
-                    "contract_compile_bytes": 0,
-                    "contract_loading_base": 35445963,
-                    "contract_loading_bytes": 1089295,
-                    "ecrecover_base": 278821988457,
-                    "ed25519_verify_base": 210000000000,
-                    "ed25519_verify_byte": 9000000,
-                    "keccak256_base": 5879491275,
-                    "keccak256_byte": 21471105,
-                    "keccak512_base": 5811388236,
-                    "keccak512_byte": 36649701,
-                    "log_base": 3543313050,
-                    "log_byte": 13198791,
-                    "promise_and_base": 1465013400,
-                    "promise_and_per_promise": 5452176,
-                    "promise_return": 560152386,
-                    "read_cached_trie_node": 2280000000,
-                    "read_memory_base": 2609863200,
-                    "read_memory_byte": 3801333,
-                    "read_register_base": 2517165186,
-                    "read_register_byte": 98562,
-                    "ripemd160_base": 853675086,
-                    "ripemd160_block": 680107584,
-                    "sha256_base": 4540970250,
-                    "sha256_byte": 24117351,
-                    "storage_has_key_base": 54039896625,
-                    "storage_has_key_byte": 30790845,
-                    "storage_iter_create_from_byte": 0,
-                    "storage_iter_create_prefix_base": 0,
-                    "storage_iter_create_prefix_byte": 0,
-                    "storage_iter_create_range_base": 0,
-                    "storage_iter_create_to_byte": 0,
-                    "storage_iter_next_base": 0,
-                    "storage_iter_next_key_byte": 0,
-                    "storage_iter_next_value_byte": 0,
-                    "storage_large_read_overhead_base": 1,
-                    "storage_large_read_overhead_byte": 1,
-                    "storage_read_base": 56356845749,
-                    "storage_read_key_byte": 30952533,
-                    "storage_read_value_byte": 5611004,
-                    "storage_remove_base": 53473030500,
-                    "storage_remove_key_byte": 38220384,
-                    "storage_remove_ret_value_byte": 11531556,
-                    "storage_write_base": 64196736000,
-                    "storage_write_evicted_byte": 32117307,
-                    "storage_write_key_byte": 70482867,
-                    "storage_write_value_byte": 31018539,
-                    "touching_trie_node": 16101955926,
-                    "utf16_decoding_base": 3543313050,
-                    "utf16_decoding_byte": 163577493,
-                    "utf8_decoding_base": 3111779061,
-                    "utf8_decoding_byte": 291580479,
-                    "validator_stake_base": 911834726400,
-                    "validator_total_stake_base": 911834726400,
-                    "write_memory_base": 2803794861,
-                    "write_memory_byte": 2723772,
-                    "write_register_base": 2865522486,
-                    "write_register_byte": 3801564,
-                    "yield_create_base": 153411779276,
-                    "yield_create_byte": 15643988,
-                    "yield_resume_base": 1195627285210,
-                    "yield_resume_byte": 47683715
-                },
-                "fix_contract_loading_cost": false,
-                "function_call_weight": true,
-                "grow_mem_cost": 1,
-                "implicit_account_creation": true,
-                "limit_config": {
-                    "account_id_validity_rules_version": 1,
-                    "contract_prepare_version": 2,
-                    "initial_memory_pages": 1024,
-                    "max_actions_per_receipt": 100,
-                    "max_arguments_length": 4194304,
-                    "max_contract_size": 4194304,
-                    "max_functions_number_per_contract": 10000,
-                    "max_gas_burnt": 300000000000000,
-                    "max_length_method_name": 256,
-                    "max_length_returned_data": 4194304,
-                    "max_length_storage_key": 2048,
-                    "max_length_storage_value": 4194304,
-                    "max_locals_per_contract": 1000000,
-                    "max_memory_pages": 2048,
-                    "max_number_bytes_method_names": 2000,
-                    "max_number_input_data_dependencies": 128,
-                    "max_number_logs": 100,
-                    "max_number_registers": 100,
-                    "max_promises_per_function_call_action": 1024,
-                    "max_receipt_size": 4194304,
-                    "max_register_size": 104857600,
-                    "max_stack_height": 262144,
-                    "max_total_log_length": 16384,
-                    "max_total_prepaid_gas": 300000000000000,
-                    "max_transaction_size": 1572864,
-                    "max_yield_payload_size": 1024,
-                    "per_receipt_storage_proof_size_limit": 4000000,
-                    "registers_memory_limit": 1073741824,
-                    "wasmer2_stack_limit": 204800,
-                    "yield_timeout_length_in_blocks": 200
-                },
-                "math_extension": true,
-                "regular_op_cost": 822756,
-                "storage_get_mode": "FlatStorage",
-                "vm_kind": "NearVm",
-                "yield_resume_host_functions": true
-            },
-            "witness_config": {
-                "combined_transactions_size_limit": 4194304,
-                "main_storage_proof_size_soft_limit": 4000000,
-                "new_transactions_validation_state_size_soft_limit": 572864
-            }
-        },
-        "shard_layout": {
-            "V1": {
-                "boundary_accounts": [
-                    "aurora",
-                    "aurora-0",
-                    "game.hot.tg",
-                    "kkuuue2akv_1630967379.near",
-                    "tge-lockup.sweat"
-                ],
-                "shards_split_map": [
-                    [
-                        0
-                    ],
-                    [
-                        1
-                    ],
-                    [
-                        2,
-                        3
-                    ],
-                    [
-                        4
-                    ],
-                    [
-                        5
-                    ]
-                ],
-                "to_parent_shard_map": [
-                    0,
-                    1,
-                    2,
-                    2,
-                    3,
-                    4
-                ],
-                "version": 3
-            }
-        },
-        "shuffle_shard_assignment_for_chunk_producers": false,
-        "target_validator_mandates_per_shard": 68,
-        "transaction_validity_period": 86400
-    }
-}
 ```

@@ -1,0 +1,769 @@
+diff --git a/Dockerfile b/Dockerfile
+index 69ee815db..b4c2ae822 100644
+--- a/Dockerfile
++++ b/Dockerfile
+@@ -31,16 +31,16 @@ ARG make_target=
+ RUN make CARGO_TARGET_DIR=/tmp/target \
+     "${make_target:?make_target not set}"
+ 
+-# Docker image
+-FROM ubuntu:22.04
+-
+-EXPOSE 3030 24567
+-
+-RUN apt-get update -qq && apt-get install -y \
+-    libssl-dev ca-certificates \
+-    && rm -rf /var/lib/apt/lists/*
+-
+-COPY scripts/run_docker.sh /usr/local/bin/run.sh
+-COPY --from=build /tmp/target/release/neard /usr/local/bin/
+-
+-CMD ["/usr/local/bin/run.sh"]
++## Docker image
++#FROM ubuntu:22.04
++#
++#EXPOSE 3030 24567
++#
++#RUN apt-get update -qq && apt-get install -y \
++#    libssl-dev ca-certificates \
++#    && rm -rf /var/lib/apt/lists/*
++#
++#COPY scripts/run_docker.sh /usr/local/bin/run.sh
++#COPY --from=build /tmp/target/release/neard /usr/local/bin/
++#
++#CMD ["/usr/local/bin/run.sh"]
+diff --git a/Makefile b/Makefile
+index 438799540..0883d59df 100644
+--- a/Makefile
++++ b/Makefile
+@@ -11,7 +11,7 @@ all: release
+ #? docker-nearcore: build nearcore docker image with tag 'nearcore'
+ docker-nearcore: DOCKER_TAG ?= nearcore
+ docker-nearcore:
+-	docker build -t $(DOCKER_TAG) -f Dockerfile --build-arg=make_target=neard-release         --progress=plain .
++	docker build -t $(DOCKER_TAG) -f Dockerfile --build-arg=make_target=neard-debug         --progress=plain .
+ 
+ #? docker-nearcore-sandbox: build nearcore docker image with tag 'nearcore-sandbox'
+ docker-nearcore-sandbox: DOCKER_TAG ?= nearcore-sandbox
+@@ -110,4 +110,4 @@ test-features-release:
+ help: Makefile
+ 	@echo " Choose a command to run:"
+ 	@sed -n 's/^#?//p' $< | column -t -s ':' |  sort | sed -e 's/^/ /'
+-.PHONY: help
+\ No newline at end of file
++.PHONY: help
+diff --git a/core/parameters/res/runtime_configs/48.yaml b/core/parameters/res/runtime_configs/48.yaml
+index 34fd52ed8..c729c500f 100644
+--- a/core/parameters/res/runtime_configs/48.yaml
++++ b/core/parameters/res/runtime_configs/48.yaml
+@@ -25,4 +25,4 @@ data_receipt_creation_per_byte: {
+     execution: 17_212_011,
+   },
+ }
+-vm_kind: { old: Wasmer0, new: Wasmer2 }
++vm_kind: { old: Wasmer0, new: Wasmtime }
+diff --git a/core/parameters/res/runtime_configs/62.yaml b/core/parameters/res/runtime_configs/62.yaml
+index d9652448d..8cf78a3bd 100644
+--- a/core/parameters/res/runtime_configs/62.yaml
++++ b/core/parameters/res/runtime_configs/62.yaml
+@@ -6,4 +6,4 @@ contract_prepare_version: { old: 1, new: 2 }
+ 
+ # There was a bug for a short period of time that we need to reproduce...
+ disable_9393_fix: { old: false, new: true }
+-vm_kind: { old: Wasmer2, new: NearVm }
++vm_kind: { old: Wasmtime, new: NearVm }
+diff --git a/csharpsdk.patch b/csharpsdk.patch
+new file mode 100644
+index 000000000..e69de29bb
+diff --git a/nearcore-contract-log.patch b/nearcore-contract-log.patch
+new file mode 100644
+index 000000000..1eae704a1
+--- /dev/null
++++ b/nearcore-contract-log.patch
+@@ -0,0 +1,329 @@
++diff --git a/Dockerfile b/Dockerfile
++index 69ee815db..b4c2ae822 100644
++--- a/Dockerfile
+++++ b/Dockerfile
++@@ -31,16 +31,16 @@ ARG make_target=
++ RUN make CARGO_TARGET_DIR=/tmp/target \
++     "${make_target:?make_target not set}"
++ 
++-# Docker image
++-FROM ubuntu:22.04
++-
++-EXPOSE 3030 24567
++-
++-RUN apt-get update -qq && apt-get install -y \
++-    libssl-dev ca-certificates \
++-    && rm -rf /var/lib/apt/lists/*
++-
++-COPY scripts/run_docker.sh /usr/local/bin/run.sh
++-COPY --from=build /tmp/target/release/neard /usr/local/bin/
++-
++-CMD ["/usr/local/bin/run.sh"]
+++## Docker image
+++#FROM ubuntu:22.04
+++#
+++#EXPOSE 3030 24567
+++#
+++#RUN apt-get update -qq && apt-get install -y \
+++#    libssl-dev ca-certificates \
+++#    && rm -rf /var/lib/apt/lists/*
+++#
+++#COPY scripts/run_docker.sh /usr/local/bin/run.sh
+++#COPY --from=build /tmp/target/release/neard /usr/local/bin/
+++#
+++#CMD ["/usr/local/bin/run.sh"]
++diff --git a/Makefile b/Makefile
++index 438799540..0883d59df 100644
++--- a/Makefile
+++++ b/Makefile
++@@ -11,7 +11,7 @@ all: release
++ #? docker-nearcore: build nearcore docker image with tag 'nearcore'
++ docker-nearcore: DOCKER_TAG ?= nearcore
++ docker-nearcore:
++-	docker build -t $(DOCKER_TAG) -f Dockerfile --build-arg=make_target=neard-release         --progress=plain .
+++	docker build -t $(DOCKER_TAG) -f Dockerfile --build-arg=make_target=neard-debug         --progress=plain .
++ 
++ #? docker-nearcore-sandbox: build nearcore docker image with tag 'nearcore-sandbox'
++ docker-nearcore-sandbox: DOCKER_TAG ?= nearcore-sandbox
++@@ -110,4 +110,4 @@ test-features-release:
++ help: Makefile
++ 	@echo " Choose a command to run:"
++ 	@sed -n 's/^#?//p' $< | column -t -s ':' |  sort | sed -e 's/^/ /'
++-.PHONY: help
++\ No newline at end of file
+++.PHONY: help
++diff --git a/runtime/near-vm-runner/src/prepare/prepare_v2.rs b/runtime/near-vm-runner/src/prepare/prepare_v2.rs
++index 69ab0c4ba..e9243de3c 100644
++--- a/runtime/near-vm-runner/src/prepare/prepare_v2.rs
+++++ b/runtime/near-vm-runner/src/prepare/prepare_v2.rs
++@@ -38,10 +38,12 @@ impl<'a> PrepareContext<'a> {
++     ///
++     /// This will validate the module, normalize the memories within, apply limits.
++     fn run(&mut self) -> Result<Vec<u8>, PrepareError> {
+++        eprintln!("prepare_v2::RUN");
++         self.before_import_section = true;
++         let parser = wp::Parser::new(0);
++         for payload in parser.parse_all(self.code) {
++             let payload = payload.map_err(|err| {
+++                eprintln!("prepare_v2::RUN map_err 1: {:?}", err);
++                 tracing::trace!(?err, "was not able to early prepare the input module");
++                 PrepareError::Deserialization
++             })?;
++@@ -50,16 +52,25 @@ impl<'a> PrepareContext<'a> {
++                     self.copy(range.clone())?;
++                     self.validator
++                         .version(num, encoding, &range)
++-                        .map_err(|_| PrepareError::Deserialization)?;
+++                        .map_err(|err| {
+++                            eprintln!("prepare_v2::RUN map_err 2: {:?}", err);
+++                            PrepareError::Deserialization
+++                        })?;
++                 }
++                 wp::Payload::End(offset) => {
++-                    self.validator.end(offset).map_err(|_| PrepareError::Deserialization)?;
+++                    self.validator.end(offset).map_err(|err| {
+++                        eprintln!("prepare_v2::RUN map_err 3: {:?}", err);
+++                        PrepareError::Deserialization
+++                    })?;
++                 }
++ 
++                 wp::Payload::TypeSection(reader) => {
++                     self.validator
++                         .type_section(&reader)
++-                        .map_err(|_| PrepareError::Deserialization)?;
+++                        .map_err(|err| {
+++                            eprintln!("prepare_v2::RUN map_err 4: {:?}", err);
+++                            PrepareError::Deserialization
+++                        })?;
++                     self.copy_section(SectionId::Type, reader.range())?;
++                 }
++ 
++@@ -67,7 +78,10 @@ impl<'a> PrepareContext<'a> {
++                     self.before_import_section = false;
++                     self.validator
++                         .import_section(&reader)
++-                        .map_err(|_| PrepareError::Deserialization)?;
+++                        .map_err(|err| {
+++                            eprintln!("prepare_v2::RUN map_err 5: {:?}", err);
+++                            PrepareError::Deserialization
+++                        })?;
++                     self.transform_import_section(&reader)?;
++                 }
++ 
++@@ -75,14 +89,20 @@ impl<'a> PrepareContext<'a> {
++                     self.ensure_import_section();
++                     self.validator
++                         .function_section(&reader)
++-                        .map_err(|_| PrepareError::Deserialization)?;
+++                        .map_err(|err| {
+++                            eprintln!("prepare_v2::RUN map_err 6: {:?}", err);
+++                            PrepareError::Deserialization
+++                        })?;
++                     self.copy_section(SectionId::Function, reader.range())?;
++                 }
++                 wp::Payload::TableSection(reader) => {
++                     self.ensure_import_section();
++                     self.validator
++                         .table_section(&reader)
++-                        .map_err(|_| PrepareError::Deserialization)?;
+++                        .map_err(|err| {
+++                            eprintln!("prepare_v2::RUN map_err 7: {:?}", err);
+++                            PrepareError::Deserialization
+++                        })?;
++                     self.copy_section(SectionId::Table, reader.range())?;
++                 }
++                 wp::Payload::MemorySection(reader) => {
++@@ -91,48 +111,69 @@ impl<'a> PrepareContext<'a> {
++                     self.ensure_import_section();
++                     self.validator
++                         .memory_section(&reader)
++-                        .map_err(|_| PrepareError::Deserialization)?;
+++                        .map_err(|err| {
+++                            eprintln!("prepare_v2::RUN map_err 8: {:?}", err);
+++                            PrepareError::Deserialization
+++                        })?;
++                 }
++                 wp::Payload::GlobalSection(reader) => {
++                     self.ensure_import_section();
++                     self.validator
++                         .global_section(&reader)
++-                        .map_err(|_| PrepareError::Deserialization)?;
+++                        .map_err(|err| {
+++                            eprintln!("prepare_v2::RUN map_err 9: {:?}", err);
+++                            PrepareError::Deserialization
+++                        })?;
++                     self.copy_section(SectionId::Global, reader.range())?;
++                 }
++                 wp::Payload::ExportSection(reader) => {
++                     self.ensure_import_section();
++                     self.validator
++                         .export_section(&reader)
++-                        .map_err(|_| PrepareError::Deserialization)?;
+++                        .map_err(|err| {
+++                            eprintln!("prepare_v2::RUN map_err 10: {:?}", err);
+++                            PrepareError::Deserialization
+++                        })?;
++                     self.copy_section(SectionId::Export, reader.range())?;
++                 }
++                 wp::Payload::StartSection { func, range } => {
++                     self.ensure_import_section();
++                     self.validator
++                         .start_section(func, &range)
++-                        .map_err(|_| PrepareError::Deserialization)?;
+++                        .map_err(|err| {
+++                            eprintln!("prepare_v2::RUN map_err 11: {:?}", err);
+++                            PrepareError::Deserialization
+++                        })?;
++                     self.copy_section(SectionId::Start, range.clone())?;
++                 }
++                 wp::Payload::ElementSection(reader) => {
++                     self.ensure_import_section();
++                     self.validator
++                         .element_section(&reader)
++-                        .map_err(|_| PrepareError::Deserialization)?;
+++                        .map_err(|err| {
+++                            eprintln!("prepare_v2::RUN map_err 12: {:?}", err);
+++                            PrepareError::Deserialization
+++                        })?;
++                     self.copy_section(SectionId::Element, reader.range())?;
++                 }
++                 wp::Payload::DataCountSection { count, range } => {
++                     self.ensure_import_section();
++                     self.validator
++                         .data_count_section(count, &range)
++-                        .map_err(|_| PrepareError::Deserialization)?;
+++                        .map_err(|err| {
+++                            eprintln!("prepare_v2::RUN map_err 13: {:?}", err);
+++                            PrepareError::Deserialization
+++                        })?;
++                     self.copy_section(SectionId::DataCount, range.clone())?;
++                 }
++                 wp::Payload::DataSection(reader) => {
++                     self.ensure_import_section();
++                     self.validator
++                         .data_section(&reader)
++-                        .map_err(|_| PrepareError::Deserialization)?;
+++                        .map_err(|err| {
+++                            eprintln!("prepare_v2::RUN map_err 14: {:?}", err);
+++                            PrepareError::Deserialization
+++                        })?;
++                     self.copy_section(SectionId::Data, reader.range())?;
++                 }
++                 wp::Payload::CodeSectionStart { size: _, count, range } => {
++@@ -143,14 +184,25 @@ impl<'a> PrepareContext<'a> {
++                         .ok_or(PrepareError::TooManyFunctions)?;
++                     self.validator
++                         .code_section_start(count, &range)
++-                        .map_err(|_| PrepareError::Deserialization)?;
+++                        .map_err(|err| {
+++                            eprintln!("prepare_v2::RUN map_err 15: {:?}", err);
+++                            PrepareError::Deserialization
+++                        })?;
++                     self.copy_section(SectionId::Code, range.clone())?;
++                 }
++                 wp::Payload::CodeSectionEntry(func) => {
++                     let local_reader =
++-                        func.get_locals_reader().map_err(|_| PrepareError::Deserialization)?;
+++                        func.get_locals_reader()
+++                        .map_err(|err| {
+++                            eprintln!("prepare_v2::RUN map_err 16: {:?}", err);
+++                            PrepareError::Deserialization
+++                        })?;
++                     for local in local_reader {
++-                        let (count, _ty) = local.map_err(|_| PrepareError::Deserialization)?;
+++                        let (count, _ty) = local
+++                        .map_err(|err| {
+++                            eprintln!("prepare_v2::RUN map_err 17: {:?}", err);
+++                            PrepareError::Deserialization
+++                        })?;
++                         self.local_limit = self
++                             .local_limit
++                             .checked_sub(u64::from(count))
++@@ -160,7 +212,10 @@ impl<'a> PrepareContext<'a> {
++                     let func_validator = self
++                         .validator
++                         .code_section_entry(&func)
++-                        .map_err(|_| PrepareError::Deserialization)?;
+++                        .map_err(|err| {
+++                            eprintln!("prepare_v2::RUN map_err 18: {:?}", err);
+++                            PrepareError::Deserialization
+++                        })?;
++                     // PANIC-SAFETY: no big deal if we panic here while the allocations are taken.
++                     // Worst-case we are going to be making new allocations again, but in practice
++                     // this should never happen as this context should not be reused.
++@@ -169,7 +224,11 @@ impl<'a> PrepareContext<'a> {
++                         wp::FuncValidatorAllocations::default(),
++                     );
++                     let mut func_validator = func_validator.into_validator(allocs);
++-                    func_validator.validate(&func).map_err(|_| PrepareError::Deserialization)?;
+++                    func_validator.validate(&func)
+++                        .map_err(|err| {
+++                            eprintln!("prepare_v2::RUN map_err 19: {:?}", err);
+++                            PrepareError::Deserialization
+++                        })?;
++                     self.func_validator_allocations = func_validator.into_allocations();
++                 }
++                 wp::Payload::CustomSection(reader) => {
++@@ -180,19 +239,20 @@ impl<'a> PrepareContext<'a> {
++                 }
++ 
++                 // Extensions not supported.
++-                wp::Payload::UnknownSection { .. }
++-                | wp::Payload::TagSection(_)
++-                | wp::Payload::ModuleSection { .. }
++-                | wp::Payload::InstanceSection(_)
++-                | wp::Payload::CoreTypeSection(_)
++-                | wp::Payload::ComponentSection { .. }
++-                | wp::Payload::ComponentInstanceSection(_)
++-                | wp::Payload::ComponentAliasSection(_)
++-                | wp::Payload::ComponentTypeSection(_)
++-                | wp::Payload::ComponentCanonicalSection(_)
++-                | wp::Payload::ComponentStartSection { .. }
++-                | wp::Payload::ComponentImportSection(_)
++-                | wp::Payload::ComponentExportSection(_) => {
+++                section @ wp::Payload::UnknownSection { .. }
+++                | section @ wp::Payload::TagSection(_)
+++                | section @ wp::Payload::ModuleSection { .. }
+++                | section @ wp::Payload::InstanceSection(_)
+++                | section @ wp::Payload::CoreTypeSection(_)
+++                | section @ wp::Payload::ComponentSection { .. }
+++                | section @ wp::Payload::ComponentInstanceSection(_)
+++                | section @ wp::Payload::ComponentAliasSection(_)
+++                | section @ wp::Payload::ComponentTypeSection(_)
+++                | section @ wp::Payload::ComponentCanonicalSection(_)
+++                | section @ wp::Payload::ComponentStartSection { .. }
+++                | section @ wp::Payload::ComponentImportSection(_)
+++                | section @ wp::Payload::ComponentExportSection(_) => {
+++                    eprintln!("prepare_v2::RUN map_err 7: unsupported section {:?}", section);
++                     tracing::trace!("input module contains unsupported section");
++                     return Err(PrepareError::Deserialization);
++                 }
++@@ -221,7 +281,10 @@ impl<'a> PrepareContext<'a> {
++                 wp::TypeRef::Table(_) => return Err(PrepareError::Instantiate),
++                 wp::TypeRef::Global(_) => return Err(PrepareError::Instantiate),
++                 wp::TypeRef::Memory(_) => return Err(PrepareError::Memory),
++-                wp::TypeRef::Tag(_) => return Err(PrepareError::Deserialization),
+++                wp::TypeRef::Tag(tag) => {
+++                    eprintln!("prepare_v2::transform_import_section: {:?}", tag);
+++                    return Err(PrepareError::Deserialization);
+++                }
++             };
++             new_section.import(import.module, import.name, new_type);
++         }
++@@ -263,7 +326,7 @@ impl<'a> PrepareContext<'a> {
++ 
++     /// Copy over the payload to the output binary without significant processing.
++     fn copy(&mut self, range: std::ops::Range<usize>) -> Result<(), PrepareError> {
++-        Ok(self.output_code.extend(self.code.get(range).ok_or(PrepareError::Deserialization)?))
+++        Ok(self.output_code.extend(self.code.get(range).ok_or_else(|| { eprintln!("COPY OK_OR_ELSE"); PrepareError::Deserialization })?))
++     }
++ }
++ 
++@@ -285,6 +348,7 @@ pub(crate) fn prepare_contract(
++         .with_gas(Box::new(SimpleGasCostCfg(u64::from(config.regular_op_cost))))
++         .analyze(&lightly_steamed)
++         .map_err(|err| {
+++            eprintln!("PREPARE_CONTRACT ANALYSIS FAILED");
++             tracing::error!(?err, ?kind, "Analysis failed");
++             PrepareError::Deserialization
++         })?
+diff --git a/runtime/near-vm-runner/src/features.rs b/runtime/near-vm-runner/src/features.rs
+index cf68b047f..0be2400cd 100644
+--- a/runtime/near-vm-runner/src/features.rs
++++ b/runtime/near-vm-runner/src/features.rs
+@@ -2,7 +2,7 @@
+ mod opts {
+     pub(super) const REFERENCE_TYPES: bool = false;
+     pub(super) const MULTI_VALUE: bool = false;
+-    pub(super) const BULK_MEMORY: bool = false;
++    pub(super) const BULK_MEMORY: bool = true;
+     pub(super) const SIMD: bool = false;
+     pub(super) const THREADS: bool = false;
+     pub(super) const TAIL_CALL: bool = false;
+diff --git a/runtime/near-vm-runner/src/near_vm_runner/runner.rs b/runtime/near-vm-runner/src/near_vm_runner/runner.rs
+index c2e2bbdd6..c9d6a0108 100644
+--- a/runtime/near-vm-runner/src/near_vm_runner/runner.rs
++++ b/runtime/near-vm-runner/src/near_vm_runner/runner.rs
+@@ -68,9 +68,19 @@ fn translate_runtime_error(
+         Err(original) => original,
+     };
+     let msg = error.message();
++    eprintln!("error msg:: {:?}", &error);
++
++    let trace = error.trace();
++    eprintln!("error trace:: {:?}", &trace);
++
++
+     let trap_code = error.to_trap().unwrap_or_else(|| {
+         panic!("runtime error is not a trap: {}", msg);
+     });
++
++    eprintln!("msg:: {:?}", msg);
++    eprintln!("trap_code:: {:?}", trap_code);
++
+     Ok(match trap_code {
+         TrapCode::GasExceeded => FunctionCallError::HostError(logic.process_gas_limit()),
+         TrapCode::StackOverflow => FunctionCallError::WasmTrap(WasmTrap::StackOverflow),
+diff --git a/runtime/near-vm-runner/src/prepare/prepare_v2.rs b/runtime/near-vm-runner/src/prepare/prepare_v2.rs
+index e0f63b206..e114ded50 100644
+--- a/runtime/near-vm-runner/src/prepare/prepare_v2.rs
++++ b/runtime/near-vm-runner/src/prepare/prepare_v2.rs
+@@ -38,10 +38,12 @@ impl<'a> PrepareContext<'a> {
+     ///
+     /// This will validate the module, normalize the memories within, apply limits.
+     fn run(&mut self) -> Result<Vec<u8>, PrepareError> {
++        eprintln!("prepare_v2::RUN");
+         self.before_import_section = true;
+         let parser = wp::Parser::new(0);
+         for payload in parser.parse_all(self.code) {
+             let payload = payload.map_err(|err| {
++                eprintln!("prepare_v2::RUN map_err 1: {:?}", err);
+                 tracing::trace!(?err, "was not able to early prepare the input module");
+                 PrepareError::Deserialization
+             })?;
+@@ -50,16 +52,25 @@ impl<'a> PrepareContext<'a> {
+                     self.copy(range.clone())?;
+                     self.validator
+                         .version(num, encoding, &range)
+-                        .map_err(|_| PrepareError::Deserialization)?;
++                        .map_err(|err| {
++                            eprintln!("prepare_v2::RUN map_err 2: {:?}", err);
++                            PrepareError::Deserialization
++                        })?;
+                 }
+                 wp::Payload::End(offset) => {
+-                    self.validator.end(offset).map_err(|_| PrepareError::Deserialization)?;
++                    self.validator.end(offset).map_err(|err| {
++                        eprintln!("prepare_v2::RUN map_err 3: {:?}", err);
++                        PrepareError::Deserialization
++                    })?;
+                 }
+ 
+                 wp::Payload::TypeSection(reader) => {
+                     self.validator
+                         .type_section(&reader)
+-                        .map_err(|_| PrepareError::Deserialization)?;
++                        .map_err(|err| {
++                            eprintln!("prepare_v2::RUN map_err 4: {:?}", err);
++                            PrepareError::Deserialization
++                        })?;
+                     self.copy_section(SectionId::Type, reader.range())?;
+                 }
+ 
+@@ -67,7 +78,10 @@ impl<'a> PrepareContext<'a> {
+                     self.before_import_section = false;
+                     self.validator
+                         .import_section(&reader)
+-                        .map_err(|_| PrepareError::Deserialization)?;
++                        .map_err(|err| {
++                            eprintln!("prepare_v2::RUN map_err 5: {:?}", err);
++                            PrepareError::Deserialization
++                        })?;
+                     self.transform_import_section(&reader)?;
+                 }
+ 
+@@ -75,14 +89,20 @@ impl<'a> PrepareContext<'a> {
+                     self.ensure_import_section();
+                     self.validator
+                         .function_section(&reader)
+-                        .map_err(|_| PrepareError::Deserialization)?;
++                        .map_err(|err| {
++                            eprintln!("prepare_v2::RUN map_err 6: {:?}", err);
++                            PrepareError::Deserialization
++                        })?;
+                     self.copy_section(SectionId::Function, reader.range())?;
+                 }
+                 wp::Payload::TableSection(reader) => {
+                     self.ensure_import_section();
+                     self.validator
+                         .table_section(&reader)
+-                        .map_err(|_| PrepareError::Deserialization)?;
++                        .map_err(|err| {
++                            eprintln!("prepare_v2::RUN map_err 7: {:?}", err);
++                            PrepareError::Deserialization
++                        })?;
+                     self.copy_section(SectionId::Table, reader.range())?;
+                 }
+                 wp::Payload::MemorySection(reader) => {
+@@ -91,48 +111,69 @@ impl<'a> PrepareContext<'a> {
+                     self.ensure_import_section();
+                     self.validator
+                         .memory_section(&reader)
+-                        .map_err(|_| PrepareError::Deserialization)?;
++                        .map_err(|err| {
++                            eprintln!("prepare_v2::RUN map_err 8: {:?}", err);
++                            PrepareError::Deserialization
++                        })?;
+                 }
+                 wp::Payload::GlobalSection(reader) => {
+                     self.ensure_import_section();
+                     self.validator
+                         .global_section(&reader)
+-                        .map_err(|_| PrepareError::Deserialization)?;
++                        .map_err(|err| {
++                            eprintln!("prepare_v2::RUN map_err 9: {:?}", err);
++                            PrepareError::Deserialization
++                        })?;
+                     self.copy_section(SectionId::Global, reader.range())?;
+                 }
+                 wp::Payload::ExportSection(reader) => {
+                     self.ensure_import_section();
+                     self.validator
+                         .export_section(&reader)
+-                        .map_err(|_| PrepareError::Deserialization)?;
++                        .map_err(|err| {
++                            eprintln!("prepare_v2::RUN map_err 10: {:?}", err);
++                            PrepareError::Deserialization
++                        })?;
+                     self.copy_section(SectionId::Export, reader.range())?;
+                 }
+                 wp::Payload::StartSection { func, range } => {
+                     self.ensure_import_section();
+                     self.validator
+                         .start_section(func, &range)
+-                        .map_err(|_| PrepareError::Deserialization)?;
++                        .map_err(|err| {
++                            eprintln!("prepare_v2::RUN map_err 11: {:?}", err);
++                            PrepareError::Deserialization
++                        })?;
+                     self.copy_section(SectionId::Start, range.clone())?;
+                 }
+                 wp::Payload::ElementSection(reader) => {
+                     self.ensure_import_section();
+                     self.validator
+                         .element_section(&reader)
+-                        .map_err(|_| PrepareError::Deserialization)?;
++                        .map_err(|err| {
++                            eprintln!("prepare_v2::RUN map_err 12: {:?}", err);
++                            PrepareError::Deserialization
++                        })?;
+                     self.copy_section(SectionId::Element, reader.range())?;
+                 }
+                 wp::Payload::DataCountSection { count, range } => {
+                     self.ensure_import_section();
+                     self.validator
+                         .data_count_section(count, &range)
+-                        .map_err(|_| PrepareError::Deserialization)?;
++                        .map_err(|err| {
++                            eprintln!("prepare_v2::RUN map_err 13: {:?}", err);
++                            PrepareError::Deserialization
++                        })?;
+                     self.copy_section(SectionId::DataCount, range.clone())?;
+                 }
+                 wp::Payload::DataSection(reader) => {
+                     self.ensure_import_section();
+                     self.validator
+                         .data_section(&reader)
+-                        .map_err(|_| PrepareError::Deserialization)?;
++                        .map_err(|err| {
++                            eprintln!("prepare_v2::RUN map_err 14: {:?}", err);
++                            PrepareError::Deserialization
++                        })?;
+                     self.copy_section(SectionId::Data, reader.range())?;
+                 }
+                 wp::Payload::CodeSectionStart { size: _, count, range } => {
+@@ -143,14 +184,25 @@ impl<'a> PrepareContext<'a> {
+                         .ok_or(PrepareError::TooManyFunctions)?;
+                     self.validator
+                         .code_section_start(count, &range)
+-                        .map_err(|_| PrepareError::Deserialization)?;
++                        .map_err(|err| {
++                            eprintln!("prepare_v2::RUN map_err 15: {:?}", err);
++                            PrepareError::Deserialization
++                        })?;
+                     self.copy_section(SectionId::Code, range.clone())?;
+                 }
+                 wp::Payload::CodeSectionEntry(func) => {
+                     let local_reader =
+-                        func.get_locals_reader().map_err(|_| PrepareError::Deserialization)?;
++                        func.get_locals_reader()
++                        .map_err(|err| {
++                            eprintln!("prepare_v2::RUN map_err 16: {:?}", err);
++                            PrepareError::Deserialization
++                        })?;
+                     for local in local_reader {
+-                        let (count, _ty) = local.map_err(|_| PrepareError::Deserialization)?;
++                        let (count, _ty) = local
++                        .map_err(|err| {
++                            eprintln!("prepare_v2::RUN map_err 17: {:?}", err);
++                            PrepareError::Deserialization
++                        })?;
+                         self.local_limit = self
+                             .local_limit
+                             .checked_sub(u64::from(count))
+@@ -160,7 +212,10 @@ impl<'a> PrepareContext<'a> {
+                     let func_validator = self
+                         .validator
+                         .code_section_entry(&func)
+-                        .map_err(|_| PrepareError::Deserialization)?;
++                        .map_err(|err| {
++                            eprintln!("prepare_v2::RUN map_err 18: {:?}", err);
++                            PrepareError::Deserialization
++                        })?;
+                     // PANIC-SAFETY: no big deal if we panic here while the allocations are taken.
+                     // Worst-case we are going to be making new allocations again, but in practice
+                     // this should never happen as this context should not be reused.
+@@ -169,7 +224,11 @@ impl<'a> PrepareContext<'a> {
+                         wp::FuncValidatorAllocations::default(),
+                     );
+                     let mut func_validator = func_validator.into_validator(allocs);
+-                    func_validator.validate(&func).map_err(|_| PrepareError::Deserialization)?;
++                    func_validator.validate(&func)
++                        .map_err(|err| {
++                            eprintln!("prepare_v2::RUN map_err 19: {:?}", err);
++                            PrepareError::Deserialization
++                        })?;
+                     self.func_validator_allocations = func_validator.into_allocations();
+                 }
+                 wp::Payload::CustomSection(reader) => {
+@@ -180,19 +239,20 @@ impl<'a> PrepareContext<'a> {
+                 }
+ 
+                 // Extensions not supported.
+-                wp::Payload::UnknownSection { .. }
+-                | wp::Payload::TagSection(_)
+-                | wp::Payload::ModuleSection { .. }
+-                | wp::Payload::InstanceSection(_)
+-                | wp::Payload::CoreTypeSection(_)
+-                | wp::Payload::ComponentSection { .. }
+-                | wp::Payload::ComponentInstanceSection(_)
+-                | wp::Payload::ComponentAliasSection(_)
+-                | wp::Payload::ComponentTypeSection(_)
+-                | wp::Payload::ComponentCanonicalSection(_)
+-                | wp::Payload::ComponentStartSection { .. }
+-                | wp::Payload::ComponentImportSection(_)
+-                | wp::Payload::ComponentExportSection(_) => {
++                section @ wp::Payload::UnknownSection { .. }
++                | section @ wp::Payload::TagSection(_)
++                | section @ wp::Payload::ModuleSection { .. }
++                | section @ wp::Payload::InstanceSection(_)
++                | section @ wp::Payload::CoreTypeSection(_)
++                | section @ wp::Payload::ComponentSection { .. }
++                | section @ wp::Payload::ComponentInstanceSection(_)
++                | section @ wp::Payload::ComponentAliasSection(_)
++                | section @ wp::Payload::ComponentTypeSection(_)
++                | section @ wp::Payload::ComponentCanonicalSection(_)
++                | section @ wp::Payload::ComponentStartSection { .. }
++                | section @ wp::Payload::ComponentImportSection(_)
++                | section @ wp::Payload::ComponentExportSection(_) => {
++                    eprintln!("prepare_v2::RUN map_err 7: unsupported section {:?}", section);
+                     tracing::trace!("input module contains unsupported section");
+                     return Err(PrepareError::Deserialization);
+                 }
+@@ -221,7 +281,10 @@ impl<'a> PrepareContext<'a> {
+                 wp::TypeRef::Table(_) => return Err(PrepareError::Instantiate),
+                 wp::TypeRef::Global(_) => return Err(PrepareError::Instantiate),
+                 wp::TypeRef::Memory(_) => return Err(PrepareError::Memory),
+-                wp::TypeRef::Tag(_) => return Err(PrepareError::Deserialization),
++                wp::TypeRef::Tag(tag) => {
++                    eprintln!("prepare_v2::transform_import_section: {:?}", tag);
++                    return Err(PrepareError::Deserialization);
++                }
+             };
+             new_section.import(import.module, import.name, new_type);
+         }
+@@ -262,7 +325,7 @@ impl<'a> PrepareContext<'a> {
+ 
+     /// Copy over the payload to the output binary without significant processing.
+     fn copy(&mut self, range: std::ops::Range<usize>) -> Result<(), PrepareError> {
+-        Ok(self.output_code.extend(self.code.get(range).ok_or(PrepareError::Deserialization)?))
++        Ok(self.output_code.extend(self.code.get(range).ok_or_else(|| { eprintln!("COPY OK_OR_ELSE"); PrepareError::Deserialization })?))
+     }
+ }
+ 
+@@ -284,6 +347,7 @@ pub(crate) fn prepare_contract(
+         .with_gas(Box::new(SimpleGasCostCfg(u64::from(config.regular_op_cost))))
+         .analyze(&lightly_steamed)
+         .map_err(|err| {
++            eprintln!("PREPARE_CONTRACT ANALYSIS FAILED");
+             tracing::error!(?err, ?kind, "Analysis failed");
+             PrepareError::Deserialization
+         })?
+diff --git a/runtime/near-vm/compiler-singlepass/src/codegen_x64.rs b/runtime/near-vm/compiler-singlepass/src/codegen_x64.rs
+index 64fb64d79..a80142c8a 100644
+--- a/runtime/near-vm/compiler-singlepass/src/codegen_x64.rs
++++ b/runtime/near-vm/compiler-singlepass/src/codegen_x64.rs
+@@ -439,9 +439,14 @@ impl<'a> FuncGen<'a> {
+             Location::Imm32(code as u32),
+             Machine::get_param_location(1, self.calling_convention),
+         );
++        eprintln!("Location::Imm32(code as u32):: {:?}", Location::Imm32(code as u32));
++        eprintln!("code as u32:: {:?}", code as u32);
++
+         // Align stack.
+         self.assembler.emit_and(Size::S64, Location::Imm32(0xfffffff0), Location::GPR(GPR::RSP));
+         let offset = self.vmoffsets.vmctx_trap_handler();
++        eprintln!("offset:: {:?}", &offset);
++
+         self.assembler
+             .emit_call_location(Location::Memory(Machine::get_vmctx_reg(), offset as i32));
+     }
+diff --git a/runtime/near-vm/vm/src/trap/traphandlers.rs b/runtime/near-vm/vm/src/trap/traphandlers.rs
+index 246e09490..a8be93261 100644
+--- a/runtime/near-vm/vm/src/trap/traphandlers.rs
++++ b/runtime/near-vm/vm/src/trap/traphandlers.rs
+@@ -394,6 +394,8 @@ extern "C" fn signal_less_trap_handler(pc: *const u8, trap: TrapCode) {
+     let jmp_buf = tls::with(|info| {
+         let backtrace = Backtrace::new_unresolved();
+         let info = info.unwrap();
++        eprintln!("backtrace:: {:?}", &backtrace);
++
+         unsafe {
+             (*info.unwind.get()).as_mut_ptr().write(UnwindReason::WasmTrap {
+                 backtrace,
+diff --git a/runtime/near-vm/vm/src/vmoffsets.rs b/runtime/near-vm/vm/src/vmoffsets.rs
+index cd8ae5be6..93c97fa4e 100644
+--- a/runtime/near-vm/vm/src/vmoffsets.rs
++++ b/runtime/near-vm/vm/src/vmoffsets.rs
+@@ -748,6 +748,8 @@ impl VMOffsets {
+     pub fn vmctx_trap_handler(&self) -> u32 {
+         // Ensure that we never ask for trap handler offset if it's not enabled.
+         assert!(self.has_trap_handlers);
++        eprintln!("vmctx_trap_handler_begin:: {:?}", &self.vmctx_trap_handler_begin);
++
+         self.vmctx_trap_handler_begin
+     }
+ }
