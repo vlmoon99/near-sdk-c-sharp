@@ -1,9 +1,17 @@
 package smartcontract:component;
 
 world smartcontract {
+  export returnvalue: func();
   export helloworld: func();
+  export returnvaluenative: func();
+  export helloworldnative: func();
+
+
+
 
   import env: interface {
+    input: func(param1: s64);
     log-utf8: func(param1: s64, param2: s64);
+    value-return: func(param1: s64, param2: s64);
   }
 }

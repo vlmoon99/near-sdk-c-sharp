@@ -1,0 +1,21 @@
+using System;
+using System.Runtime.InteropServices;
+
+public static class WasmImports
+{
+    [WasmImport(Module = "env", Name = "log_utf8")]
+    public static extern void LogUtf8(long length, long ptr);
+}
+
+public static class MyContract
+{
+    [WasmExport(Name = "add")]
+    public static int Add(int a, int b) => a + b;
+
+    [WasmExport(Name = "hello")]
+    public static void HelloWorld()
+    {
+        byte[] message = { 104,101,108,108,111 };
+        unsafe { fixed(byte* p = message) { WasmImports.LogUtf8(message.Length, (long)p); } }
+    }
+}

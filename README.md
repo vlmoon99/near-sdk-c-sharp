@@ -180,7 +180,7 @@ We will need to copy all data in new file call test.near.json + we need to add n
 
 After we have all necessary files inside near-sdk-c-sharp/smartcontract/test-wasm, we can start to test it local 
 
-near contract deploy test.near use-file ./test.wasm with-init-call new json-args {} prepaid-gas '100.0 Tgas' attached-deposit '0 NEAR' network-config localnet sign-with-access-key-file test.near.json send
+near contract deploy test.near use-file ./test.wasm with-init-call helloworld json-args {} prepaid-gas '300.0 Tgas' attached-deposit '0 NEAR' network-config localnet sign-with-access-key-file test.near.json send
 
 ```
 # Discover Near Blockchain SDK, API which can be helpful in creating SDK on C#
