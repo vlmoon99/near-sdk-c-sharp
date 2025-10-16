@@ -1,6 +1,5 @@
 {
   "account_id": "test.near",
-  "public_key": "ed25519:Ev9PBTUbbZA1qMv9amgrqmTEgx1tkdD8Ug5xfeR7dGdk",
-  "secret_key": "ed25519:4REmPCyVnSXWhQkrR4S8Z7weAGKLqUKxdEBf62jfpwNb6s5HNsLptY1Sghd82vfLw8zFdpMrsFy2Yz4Dwi5kefhG",
-  "private_key": "ed25519:4REmPCyVnSXWhQkrR4S8Z7weAGKLqUKxdEBf62jfpwNb6s5HNsLptY1Sghd82vfLw8zFdpMrsFy2Yz4Dwi5kefhG"
+  "public_key": "ed25519:3D2HaLhjHzAHUNVhmU9WdtQfBpkJnNge4PnPFA37GZAs",
+  "private_key": "ed25519:3U4wQiHdXYXZhqSHnqF3RYy8oTdyysCwamUrAR9XTrQtRsSvUpCdHGZoW9C17X8PcM7mAGzhms5xvPMuKN2FbZQo"
 }

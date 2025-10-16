@@ -1,5 +1,0 @@
-llc-18 -O3 -march=wasm32 -filetype=obj output.ll -o output_opt.o
-wasm-ld --no-entry --export-all --strip-all -o output_opt.wasm output_opt.o
-
-
-near contract deploy tutorialneargocli.testnet use-file output_opt.wasm with-init-call helloworld json-args {} prepaid-gas '100.0 Tgas' attached-deposit '0 NEAR' network-config testnet sign-with-keychain send

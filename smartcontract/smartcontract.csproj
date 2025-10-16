@@ -5,17 +5,21 @@
     <OutputType>library</OutputType>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
+    <DebugType>none</DebugType>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <StackTraceSupport>false</StackTraceSupport>
+    <OptimizationPreference>Size</OptimizationPreference>
+    
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <ILLinkTreatWarningsAsErrors>false</ILLinkTreatWarningsAsErrors>
+    <TrimmerRemoveSymbols>true</TrimmerRemoveSymbols>
+    <DebuggerSupport>false</DebuggerSupport>
+
     <PublishTrimmed>true</PublishTrimmed>
     <SelfContained>true</SelfContained>
-    <MSBuildEnableWorkloadResolver>false</MSBuildEnableWorkloadResolver>
-    
-    <WasmEnableJSBigIntIntegration>false</WasmEnableJSBigIntIntegration>
-    <WasmEnableNonTrappingFloatToIntConversions>false</WasmEnableNonTrappingFloatToIntConversions>
-    <WasmEnableExceptionHandling>false</WasmEnableExceptionHandling>
-  
-    <IlcWasmStackSize>1048576</IlcWasmStackSize>
-    <IlcWasmGlobalBase>1024</IlcWasmGlobalBase>
-  
+
+    <IlcGenerateMstatFile>true</IlcGenerateMstatFile>
+    <IlcGenerateDgmlFile>true</IlcGenerateDgmlFile>
   </PropertyGroup>
 
   <ItemGroup>
