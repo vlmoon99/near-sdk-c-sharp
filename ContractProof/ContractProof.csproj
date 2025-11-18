@@ -1,8 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
     <OutputType>library</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+
+    <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
 
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DebugType>none</DebugType>
@@ -17,18 +19,17 @@
     <SelfContained>true</SelfContained>
     <IlcGenerateMstatFile>true</IlcGenerateMstatFile>
     <IlcGenerateDgmlFile>true</IlcGenerateDgmlFile>
-    
+
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.DotNet.ILCompiler.LLVM" Version="10.0.0-*" />
     <PackageReference Include="runtime.$(NETCoreSdkPortableRuntimeIdentifier).Microsoft.DotNet.ILCompiler.LLVM" Version="10.0.0-*" />
   </ItemGroup>
+  
 
   <ItemGroup>
-    <NativeLibrary Include="stubs.o" />
     <CustomLinkerArg Include="-Wl,--component-type $(MSBuildProjectDirectory)/smartcontract.wit" />
   </ItemGroup>
-
 
 </Project>

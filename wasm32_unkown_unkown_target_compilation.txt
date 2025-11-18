@@ -1,0 +1,93 @@
+Prerequisites :
+
+0. Ubuntu x86/64 or arm (native or wsl based) 
+1. Dotnet 10 [https://dotnet.microsoft.com/en-us/download/dotnet/10.0]
+2. Wasi SDK 27 (Dowload from releases and unzip , in the future u will use clang++ from there and it also will be nesessary for dotnet to wasi compilation) [https://github.com/WebAssembly/wasi-sdk]
+3. wasm-tools, wat2wasm tools (Install it using via rust and cargo or find pre-built bin's)
+4. near cli [https://docs.near.org/tools/near-cli#installation]
+
+
+Steps :
+
+1. Create empty project
+```bash
+dotnet new console -n ContractProof
+```
+
+2.Configure csproj file
+
+2.1 Set output type from
+
+```csharp
+    <OutputType>Exe</OutputType>
+```
+to
+
+```csharp
+    <OutputType>library</OutputType>
+```
+
+2.2 Add nesessary props for small size wasm output 
+
+```csharp
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>none</DebugType>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <StackTraceSupport>false</StackTraceSupport>
+    <OptimizationPreference>Size</OptimizationPreference>
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <ILLinkTreatWarningsAsErrors>false</ILLinkTreatWarningsAsErrors>
+    <TrimmerRemoveSymbols>true</TrimmerRemoveSymbols>
+    <DebuggerSupport>false</DebuggerSupport>
+    <PublishTrimmed>true</PublishTrimmed>
+    <SelfContained>true</SelfContained>
+    <IlcGenerateMstatFile>true</IlcGenerateMstatFile>
+    <IlcGenerateDgmlFile>true</IlcGenerateDgmlFile>
+```
+
+2.3 Add Native AOT LLVM Compiler to the project
+
+```csharp
+  <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.ILCompiler.LLVM" Version="10.0.0-*" />
+    <PackageReference Include="runtime.$(NETCoreSdkPortableRuntimeIdentifier).Microsoft.DotNet.ILCompiler.LLVM" Version="10.0.0-*" />
+  </ItemGroup>
+```
+
+2.4 Add nuget.config with next properties
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <clear />
+    <add key="nuget" value="https://api.nuget.org/v3/index.json" />
+    <add key="dotnet-experimental" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-experimental/nuget/v3/index.json" />
+  </packageSources>
+</configuration>
+```
+
+It was the initital setup of the project, in the future we will return in our csproj file for future optimizations of wasi build
+
+
+3.Write Smart Contract which will later on we will compile to the clean wasm target. If u are new to the Blockchain technology and smart contract developemnt, I advie to read a little bit about it on the Near Blockchain docs website Basics[https://docs.near.org/protocol/basics] Smart Contract Developemnt[https://docs.near.org/smart-contracts/what-is].
+But I Will try to make it simple  to write this few sentences for fully underestending what we will write the next :
+1.Each Smart Contract represents a code which stores on the Blockhain nodes and other users can execute this code.
+2.Each Smart Contract has some sort of native functions (aka native functions(File System, Networing, Time, Cryptography) on Linux,Windows,Mac os ) and u can use this Blockhcain native Fucntions inside smart contract
+3.The basic things which blockhcain can do insdie smart contract functions - 
+[1.write/read data, 
+ 2.call native blockhcain cryptography functiosn , 
+ 3.call other smart contracts, 
+ 4.get block time, 
+ 5.get tx information (who sign tx , who will recive it , how much gas user has to spend, how much deposit user attatch to the tx, what the input of the user)
+]
+
+4.Each Tx on a chain cost money(Near Tokens) in one word it called Gas which is means how much computatonal resources blockchain node spends in order to execute your functions, each data which was stored also cost tokens which is 100kb per NEAR token .
+So taking it into account we need to write our functions small, efficient, for cheapest and fastest transaction.
+
+
+After a little theoretical inforamtion we are able to get into writing our first smart contract code.
+
+```csharp
+
+```
