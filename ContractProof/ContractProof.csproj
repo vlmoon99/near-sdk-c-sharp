@@ -32,4 +32,9 @@
     <CustomLinkerArg Include="-Wl,--component-type $(MSBuildProjectDirectory)/smartcontract.wit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <NativeLibrary Include="stubs.o" />
+    <CustomLinkerArg Include="-Wl,--component-type $(MSBuildProjectDirectory)/smartcontract.wit" />
+  </ItemGroup>
+
 </Project>

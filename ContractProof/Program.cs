@@ -1,19 +1,24 @@
-﻿
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace ContractProof;
+
 public unsafe static class SmartContract
 {
     [UnmanagedCallersOnly(EntryPoint = "returnvalue")]
     public static unsafe void RetunValue()
     {
-        NearSystemImports.Input(NearBlockchainEnv.AtomicOpRegister);
+        var (data, type, error) = NearBlockchainEnv.ContractInputRaw();
+        
+        if (error != null)
+        {
+            NearBlockchainEnv.LogString($"Error reading input: {error.Message}");
+            return;
+        }
 
-        Span<byte> utf8Bytes =
-        [
-            104, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100
-        ];
+        string message = "hello world";
+        byte[] utf8Bytes = Encoding.UTF8.GetBytes(message);
 
         fixed (byte* ptr = utf8Bytes)
         {
@@ -24,12 +29,16 @@ public unsafe static class SmartContract
     [UnmanagedCallersOnly(EntryPoint = "helloworld")]
     public static unsafe void HelloWorld()
     {
-        NearSystemImports.Input(NearBlockchainEnv.AtomicOpRegister);
+        var (data, type, error) = NearBlockchainEnv.ContractInputRaw();
+        
+        if (error != null)
+        {
+            NearBlockchainEnv.LogString($"Error reading input: {error.Message}");
+            return;
+        }
 
-        Span<byte> utf8Bytes =
-        [
-            104, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100
-        ];
+        string message = "hello world";
+        byte[] utf8Bytes = Encoding.UTF8.GetBytes(message);
 
         fixed (byte* ptr = utf8Bytes)
         {
