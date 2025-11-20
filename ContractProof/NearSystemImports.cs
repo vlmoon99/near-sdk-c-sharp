@@ -8,246 +8,246 @@ public unsafe static class NearSystemImports
     // Register operations
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "read-register")]
-    public static extern void ReadRegister(long registerId, long ptr);
+    public static extern void ReadRegister(ulong registerId, ulong ptr);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "register-len")]
-    public static extern long RegisterLen(long registerId);
+    public static extern ulong RegisterLen(ulong registerId);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "write-register")]
-    public static extern void WriteRegister(long registerId, long dataLen, long dataPtr);
+    public static extern void WriteRegister(ulong registerId, ulong dataLen, ulong dataPtr);
 
     // Storage operations
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "storage-write")]
-    public static extern long StorageWrite(long keyLen, long keyPtr, long valueLen, long valuePtr, long registerId);
+    public static extern ulong StorageWrite(ulong keyLen, ulong keyPtr, ulong valueLen, ulong valuePtr, ulong registerId);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "storage-read")]
-    public static extern long StorageRead(long keyLen, long keyPtr, long registerId);
+    public static extern ulong StorageRead(ulong keyLen, ulong keyPtr, ulong registerId);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "storage-remove")]
-    public static extern long StorageRemove(long keyLen, long keyPtr, long registerId);
+    public static extern ulong StorageRemove(ulong keyLen, ulong keyPtr, ulong registerId);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "storage-has-key")]
-    public static extern long StorageHasKey(long keyLen, long keyPtr);
+    public static extern ulong StorageHasKey(ulong keyLen, ulong keyPtr);
 
     // Account operations
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "current-account-id")]
-    public static extern void CurrentAccountId(long registerId);
+    public static extern void CurrentAccountId(ulong registerId);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "signer-account-id")]
-    public static extern void SignerAccountId(long registerId);
+    public static extern void SignerAccountId(ulong registerId);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "signer-account-pk")]
-    public static extern void SignerAccountPk(long registerId);
+    public static extern void SignerAccountPk(ulong registerId);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "predecessor-account-id")]
-    public static extern void PredecessorAccountId(long registerId);
+    public static extern void PredecessorAccountId(ulong registerId);
 
     // Input operations
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "input")]
-    public static extern void Input(long registerId);
+    public static extern void Input(ulong registerId);
 
     // Block operations
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "block-index")]
-    public static extern long BlockIndex();
+    public static extern ulong BlockIndex();
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "block-timestamp")]
-    public static extern long BlockTimestamp();
+    public static extern ulong BlockTimestamp();
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "epoch-height")]
-    public static extern long EpochHeight();
+    public static extern ulong EpochHeight();
 
     // Storage and balance operations
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "storage-usage")]
-    public static extern long StorageUsage();
+    public static extern ulong StorageUsage();
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "account-balance")]
-    public static extern void AccountBalance(long balancePtr);
+    public static extern void AccountBalance(ulong balancePtr);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "account-locked-balance")]
-    public static extern void AccountLockedBalance(long balancePtr);
+    public static extern void AccountLockedBalance(ulong balancePtr);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "attached-deposit")]
-    public static extern void AttachedDeposit(long balancePtr);
+    public static extern void AttachedDeposit(ulong balancePtr);
 
     // Gas operations
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "prepaid-gas")]
-    public static extern long PrepaidGas();
+    public static extern ulong PrepaidGas();
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "used-gas")]
-    public static extern long UsedGas();
+    public static extern ulong UsedGas();
 
     // Random operations
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "random-seed")]
-    public static extern void RandomSeed(long registerId);
+    public static extern void RandomSeed(ulong registerId);
 
     // Cryptographic hash operations
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "sha256")]
-    public static extern void Sha256(long valueLen, long valuePtr, long registerId);
+    public static extern void Sha256(ulong valueLen, ulong valuePtr, ulong registerId);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "keccak256")]
-    public static extern void Keccak256(long valueLen, long valuePtr, long registerId);
+    public static extern void Keccak256(ulong valueLen, ulong valuePtr, ulong registerId);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "keccak512")]
-    public static extern void Keccak512(long valueLen, long valuePtr, long registerId);
+    public static extern void Keccak512(ulong valueLen, ulong valuePtr, ulong registerId);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "ripemd160")]
-    public static extern void Ripemd160(long valueLen, long valuePtr, long registerId);
+    public static extern void Ripemd160(ulong valueLen, ulong valuePtr, ulong registerId);
 
     // Cryptographic signature operations
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "ecrecover")]
-    public static extern long Ecrecover(long hashLen, long hashPtr, long sigLen, long sigPtr, long v, long malleabilityFlag, long registerId);
+    public static extern ulong Ecrecover(ulong hashLen, ulong hashPtr, ulong sigLen, ulong sigPtr, ulong v, ulong malleabilityFlag, ulong registerId);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "ed25519-verify")]
-    public static extern long Ed25519Verify(long sigLen, long sigPtr, long msgLen, long msgPtr, long pubKeyLen, long pubKeyPtr);
+    public static extern ulong Ed25519Verify(ulong sigLen, ulong sigPtr, ulong msgLen, ulong msgPtr, ulong pubKeyLen, ulong pubKeyPtr);
 
     // Alt BN128 operations
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "alt-bn128-g1-multiexp")]
-    public static extern void AltBn128G1Multiexp(long valueLen, long valuePtr, long registerId);
+    public static extern void AltBn128G1Multiexp(ulong valueLen, ulong valuePtr, ulong registerId);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "alt-bn128-g1-sum")]
-    public static extern void AltBn128G1Sum(long valueLen, long valuePtr, long registerId);
+    public static extern void AltBn128G1Sum(ulong valueLen, ulong valuePtr, ulong registerId);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "alt-bn128-pairing-check")]
-    public static extern long AltBn128PairingCheck(long valueLen, long valuePtr);
+    public static extern ulong AltBn128PairingCheck(ulong valueLen, ulong valuePtr);
 
     // Validator operations
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "validator-stake")]
-    public static extern void ValidatorStake(long accountIdLen, long accountIdPtr, long stakePtr);
+    public static extern void ValidatorStake(ulong accountIdLen, ulong accountIdPtr, ulong stakePtr);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "validator-total-stake")]
-    public static extern void ValidatorTotalStake(long stakePtr);
+    public static extern void ValidatorTotalStake(ulong stakePtr);
 
     // Return and logging operations
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "value-return")]
-    public static extern void ValueReturn(long valueLen, long valuePtr);
+    public static extern void ValueReturn(ulong valueLen, ulong valuePtr);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "panic-utf8")]
-    public static extern void PanicUtf8(long len, long ptr);
+    public static extern void PanicUtf8(ulong len, ulong ptr);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "log-utf8")]
-    public static extern void LogUtf8(long len, long ptr);
+    public static extern void LogUtf8(ulong len, ulong ptr);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "log-utf16")]
-    public static extern void LogUtf16(long len, long ptr);
+    public static extern void LogUtf16(ulong len, ulong ptr);
 
     // Promise operations
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "promise-create")]
-    public static extern long PromiseCreate(long accountIdLen, long accountIdPtr, long functionNameLen, long functionNamePtr, long argumentsLen, long argumentsPtr, long amountPtr, long gas);
+    public static extern ulong PromiseCreate(ulong accountIdLen, ulong accountIdPtr, ulong functionNameLen, ulong functionNamePtr, ulong argumentsLen, ulong argumentsPtr, ulong amountPtr, ulong gas);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "promise-then")]
-    public static extern long PromiseThen(long promiseIndex, long accountIdLen, long accountIdPtr, long functionNameLen, long functionNamePtr, long argumentsLen, long argumentsPtr, long amountPtr, long gas);
+    public static extern ulong PromiseThen(ulong promiseIndex, ulong accountIdLen, ulong accountIdPtr, ulong functionNameLen, ulong functionNamePtr, ulong argumentsLen, ulong argumentsPtr, ulong amountPtr, ulong gas);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "promise-and")]
-    public static extern long PromiseAnd(long promiseIdxPtr, long promiseIdxCount);
+    public static extern ulong PromiseAnd(ulong promiseIdxPtr, ulong promiseIdxCount);
 
     // Promise batch operations
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "promise-batch-create")]
-    public static extern long PromiseBatchCreate(long accountIdLen, long accountIdPtr);
+    public static extern ulong PromiseBatchCreate(ulong accountIdLen, ulong accountIdPtr);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "promise-batch-then")]
-    public static extern long PromiseBatchThen(long promiseIndex, long accountIdLen, long accountIdPtr);
+    public static extern ulong PromiseBatchThen(ulong promiseIndex, ulong accountIdLen, ulong accountIdPtr);
 
     // Promise batch actions
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "promise-batch-action-create-account")]
-    public static extern void PromiseBatchActionCreateAccount(long promiseIndex);
+    public static extern void PromiseBatchActionCreateAccount(ulong promiseIndex);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "promise-batch-action-deploy-contract")]
-    public static extern void PromiseBatchActionDeployContract(long promiseIndex, long codeLen, long codePtr);
+    public static extern void PromiseBatchActionDeployContract(ulong promiseIndex, ulong codeLen, ulong codePtr);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "promise-batch-action-function-call")]
-    public static extern void PromiseBatchActionFunctionCall(long promiseIndex, long functionNameLen, long functionNamePtr, long argumentsLen, long argumentsPtr, long amountPtr, long gas);
+    public static extern void PromiseBatchActionFunctionCall(ulong promiseIndex, ulong functionNameLen, ulong functionNamePtr, ulong argumentsLen, ulong argumentsPtr, ulong amountPtr, ulong gas);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "promise-batch-action-function-call-weight")]
-    public static extern void PromiseBatchActionFunctionCallWeight(long promiseIndex, long functionNameLen, long functionNamePtr, long argumentsLen, long argumentsPtr, long amountPtr, long gas, long weight);
+    public static extern void PromiseBatchActionFunctionCallWeight(ulong promiseIndex, ulong functionNameLen, ulong functionNamePtr, ulong argumentsLen, ulong argumentsPtr, ulong amountPtr, ulong gas, ulong weight);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "promise-batch-action-transfer")]
-    public static extern void PromiseBatchActionTransfer(long promiseIndex, long amountPtr);
+    public static extern void PromiseBatchActionTransfer(ulong promiseIndex, ulong amountPtr);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "promise-batch-action-stake")]
-    public static extern void PromiseBatchActionStake(long promiseIndex, long amountPtr, long publicKeyLen, long publicKeyPtr);
+    public static extern void PromiseBatchActionStake(ulong promiseIndex, ulong amountPtr, ulong publicKeyLen, ulong publicKeyPtr);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "promise-batch-action-add-key-with-full-access")]
-    public static extern void PromiseBatchActionAddKeyWithFullAccess(long promiseIndex, long publicKeyLen, long publicKeyPtr, long nonce);
+    public static extern void PromiseBatchActionAddKeyWithFullAccess(ulong promiseIndex, ulong publicKeyLen, ulong publicKeyPtr, ulong nonce);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "promise-batch-action-add-key-with-function-call")]
-    public static extern void PromiseBatchActionAddKeyWithFunctionCall(long promiseIndex, long publicKeyLen, long publicKeyPtr, long nonce, long allowancePtr, long receiverIdLen, long receiverIdPtr, long functionNamesLen, long functionNamesPtr);
+    public static extern void PromiseBatchActionAddKeyWithFunctionCall(ulong promiseIndex, ulong publicKeyLen, ulong publicKeyPtr, ulong nonce, ulong allowancePtr, ulong receiverIdLen, ulong receiverIdPtr, ulong functionNamesLen, ulong functionNamesPtr);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "promise-batch-action-delete-key")]
-    public static extern void PromiseBatchActionDeleteKey(long promiseIndex, long publicKeyLen, long publicKeyPtr);
+    public static extern void PromiseBatchActionDeleteKey(ulong promiseIndex, ulong publicKeyLen, ulong publicKeyPtr);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "promise-batch-action-delete-account")]
-    public static extern void PromiseBatchActionDeleteAccount(long promiseIndex, long beneficiaryIdLen, long beneficiaryIdPtr);
+    public static extern void PromiseBatchActionDeleteAccount(ulong promiseIndex, ulong beneficiaryIdLen, ulong beneficiaryIdPtr);
 
     // Promise yield operations
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "promise-yield-create")]
-    public static extern long PromiseYieldCreate(long functionNameLen, long functionNamePtr, long argumentsLen, long argumentsPtr, long gas, long gasWeight, long registerId);
+    public static extern ulong PromiseYieldCreate(ulong functionNameLen, ulong functionNamePtr, ulong argumentsLen, ulong argumentsPtr, ulong gas, ulong gasWeight, ulong registerId);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "promise-yield-resume")]
-    public static extern uint PromiseYieldResume(long dataIdLen, long dataIdPtr, long payloadLen, long payloadPtr);
+    public static extern uint PromiseYieldResume(ulong dataIdLen, ulong dataIdPtr, ulong payloadLen, ulong payloadPtr);
 
     // Promise result operations
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "promise-results-count")]
-    public static extern long PromiseResultsCount();
+    public static extern ulong PromiseResultsCount();
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "promise-result")]
-    public static extern long PromiseResult(long resultIdx, long registerId);
+    public static extern ulong PromiseResult(ulong resultIdx, ulong registerId);
 
     [WasmImportLinkage]
     [DllImport("env", EntryPoint = "promise-return")]
-    public static extern void PromiseReturn(long promiseId);
+    public static extern void PromiseReturn(ulong promiseId);
 }

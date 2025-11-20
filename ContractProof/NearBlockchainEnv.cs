@@ -8,17 +8,17 @@ public unsafe static class NearBlockchainEnv
 {
     public const string RegisterExpectedErr = "Register was expected to have data because we just wrote it into it.";
 
-    public const long AtomicOpRegister = long.MaxValue - 2;
+    public const ulong AtomicOpRegister = ulong.MaxValue - 2;
 
-    public const long EvictedRegister = long.MaxValue - 1;
+    public const ulong EvictedRegister = ulong.MaxValue - 1;
 
-    public const long DataIdRegister = 0;
+    public const ulong DataIdRegister = 0;
 
     public static readonly byte[] StateKey = Encoding.UTF8.GetBytes("STATE");
 
-    public const long MinAccountIDLen = 2;
+    public const ulong MinAccountIDLen = 2;
 
-    public const long MaxAccountIDLen = 64;
+    public const ulong MaxAccountIDLen = 64;
 
     // Error messages
     public const string ErrExpectedDataInRegister = "(REGISTER_ERROR): expected data in register, but found none";
@@ -53,7 +53,7 @@ public unsafe static class NearBlockchainEnv
     /// <param name="method">The method to be executed.</param>
     /// <returns>The data read from the register.</returns>
     /// <exception cref="Exception">Thrown when the method execution or data reading fails.</exception>
-    public static byte[] TryMethodIntoRegister(Action<long> method)
+    public static byte[] TryMethodIntoRegister(Action<ulong> method)
     {
         method(AtomicOpRegister);
         return ReadRegisterSafe(AtomicOpRegister);
@@ -65,7 +65,7 @@ public unsafe static class NearBlockchainEnv
     /// <param name="method">The method to be executed.</param>
     /// <returns>The data read from the register.</returns>
     /// <exception cref="Exception">Thrown when the method execution or data reading fails.</exception>
-    public static byte[] MethodIntoRegister(Action<long> method)
+    public static byte[] MethodIntoRegister(Action<ulong> method)
     {
         var data = TryMethodIntoRegister(method);
         if (data == null || data.Length == 0)
@@ -81,9 +81,9 @@ public unsafe static class NearBlockchainEnv
     /// <param name="registerId">The ID of the register to read from.</param>
     /// <returns>The data read from the register.</returns>
     /// <exception cref="Exception">Thrown when the register reading fails.</exception>
-    public static byte[] ReadRegisterSafe(long registerId)
+    public static byte[] ReadRegisterSafe(ulong registerId)
     {
-        long length = NearSystemImports.RegisterLen(registerId);
+        ulong length = NearSystemImports.RegisterLen(registerId);
 
         // Assert valid account id
         AssertValidAccountId(Encoding.UTF8.GetBytes(length.ToString()));
@@ -96,7 +96,7 @@ public unsafe static class NearBlockchainEnv
         byte[] buffer = new byte[length];
         fixed (byte* ptr = buffer)
         {
-            NearSystemImports.ReadRegister(registerId, (long)ptr);
+            NearSystemImports.ReadRegister(registerId, (ulong)ptr);
         }
 
         return buffer;
@@ -107,7 +107,7 @@ public unsafe static class NearBlockchainEnv
     /// </summary>
     /// <param name="registerId">The ID of the register to write to.</param>
     /// <param name="data">The data to be written to the register.</param>
-    public static void WriteRegisterSafe(long registerId, byte[] data)
+    public static void WriteRegisterSafe(ulong registerId, byte[] data)
     {
         if (data == null || data.Length == 0)
         {
@@ -116,7 +116,7 @@ public unsafe static class NearBlockchainEnv
 
         fixed (byte* ptr = data)
         {
-            NearSystemImports.WriteRegister(registerId, data.Length, (long)ptr);
+            NearSystemImports.WriteRegister(registerId, (ulong)data.Length, (ulong)ptr);
         }
     }
 
@@ -141,13 +141,13 @@ public unsafe static class NearBlockchainEnv
             throw new Exception(ErrValueNotFound);
         }
 
-        long keyLen = key.Length;
-        long valueLen = value.Length;
+        ulong keyLen = (ulong)key.Length;
+        ulong valueLen = (ulong)value.Length;
 
         fixed (byte* keyPtr = key)
         fixed (byte* valuePtr = value)
         {
-            return StorageWriteRecursive(keyLen, (long)keyPtr, valueLen, (long)valuePtr, 0);
+            return StorageWriteRecursive(keyLen, (ulong)keyPtr, valueLen, (ulong)valuePtr, 0);
         }
     }
 
@@ -161,9 +161,9 @@ public unsafe static class NearBlockchainEnv
     /// <param name="attempt">The current attempt number.</param>
     /// <returns>True if the value was successfully written, false otherwise.</returns>
     /// <exception cref="Exception">Thrown when the write operation fails after the allowed attempts.</exception>
-    public static bool StorageWriteRecursive(long keyLen, long keyPtr, long valueLen, long valuePtr, int attempt)
+    public static bool StorageWriteRecursive(ulong keyLen, ulong keyPtr, ulong valueLen, ulong valuePtr, int attempt)
     {
-        long result = NearSystemImports.StorageWrite(keyLen, keyPtr, valueLen, valuePtr, EvictedRegister);
+        ulong result = NearSystemImports.StorageWrite(keyLen, keyPtr, valueLen, valuePtr, EvictedRegister);
 
         if (result == 1)
         {
@@ -191,12 +191,12 @@ public unsafe static class NearBlockchainEnv
             throw new Exception(ErrKeyIsEmpty);
         }
 
-        long keyLen = key.Length;
-        long result;
+        ulong keyLen = (ulong)key.Length;
+        ulong result;
 
         fixed (byte* keyPtr = key)
         {
-            result = NearSystemImports.StorageRead(keyLen, (long)keyPtr, AtomicOpRegister);
+            result = NearSystemImports.StorageRead(keyLen, (ulong)keyPtr, AtomicOpRegister);
         }
 
         if (result == 0)
@@ -226,12 +226,12 @@ public unsafe static class NearBlockchainEnv
             throw new Exception(ErrKeyIsEmpty);
         }
 
-        long keyLen = key.Length;
-        long result;
+        ulong keyLen = (ulong)key.Length;
+        ulong result;
 
         fixed (byte* keyPtr = key)
         {
-            result = NearSystemImports.StorageRemove(keyLen, (long)keyPtr, EvictedRegister);
+            result = NearSystemImports.StorageRemove(keyLen, (ulong)keyPtr, EvictedRegister);
         }
 
         if (result == 0)
@@ -273,12 +273,12 @@ public unsafe static class NearBlockchainEnv
             throw new Exception(ErrKeyIsEmpty);
         }
 
-        long keyLen = key.Length;
-        long result;
+        ulong keyLen = (ulong)key.Length;
+        ulong result;
 
         fixed (byte* keyPtr = key)
         {
-            result = NearSystemImports.StorageHasKey(keyLen, (long)keyPtr);
+            result = NearSystemImports.StorageHasKey(keyLen, (ulong)keyPtr);
         }
 
         return result == 1;
@@ -291,13 +291,13 @@ public unsafe static class NearBlockchainEnv
     /// <exception cref="Exception">Thrown when the write operation fails.</exception>
     public static void StateWrite(byte[] data)
     {
-        long keyLen = StateKey.Length;
-        long valueLen = data.Length;
+        ulong keyLen = (ulong)StateKey.Length;
+        ulong valueLen = (ulong)data.Length;
 
         fixed (byte* keyPtr = StateKey)
         fixed (byte* valuePtr = data)
         {
-            StorageWriteRecursive(keyLen, (long)keyPtr, valueLen, (long)valuePtr, 0);
+            StorageWriteRecursive(keyLen, (ulong)keyPtr, valueLen, (ulong)valuePtr, 0);
         }
     }
 
@@ -308,12 +308,12 @@ public unsafe static class NearBlockchainEnv
     /// <exception cref="Exception">Thrown when the read operation fails.</exception>
     public static byte[] StateRead()
     {
-        long keyLen = StateKey.Length;
-        long result;
+        ulong keyLen = (ulong)StateKey.Length;
+        ulong result;
 
         fixed (byte* keyPtr = StateKey)
         {
-            result = NearSystemImports.StorageRead(keyLen, (long)keyPtr, EvictedRegister);
+            result = NearSystemImports.StorageRead(keyLen, (ulong)keyPtr, EvictedRegister);
         }
 
         if (result == 0)
@@ -336,12 +336,12 @@ public unsafe static class NearBlockchainEnv
     /// <returns>True if the state exists, false otherwise.</returns>
     public static bool StateExists()
     {
-        long keyLen = StateKey.Length;
-        long result;
+        ulong keyLen = (ulong)StateKey.Length;
+        ulong result;
 
         fixed (byte* keyPtr = StateKey)
         {
-            result = NearSystemImports.StorageHasKey(keyLen, (long)keyPtr);
+            result = NearSystemImports.StorageHasKey(keyLen, (ulong)keyPtr);
         }
 
         return result == 1;
@@ -444,7 +444,7 @@ public unsafe static class NearBlockchainEnv
     /// Retrieves the current block height.
     /// </summary>
     /// <returns>The current block height.</returns>
-    public static long GetCurrentBlockHeight()
+    public static ulong GetCurrentBlockHeight()
     {
         return NearSystemImports.BlockTimestamp();
     }
@@ -453,7 +453,7 @@ public unsafe static class NearBlockchainEnv
     /// Retrieves the block time in milliseconds.
     /// </summary>
     /// <returns>The block time in milliseconds.</returns>
-    public static long GetBlockTimeMs()
+    public static ulong GetBlockTimeMs()
     {
         return NearSystemImports.BlockTimestamp() / 1_000_000;
     }
@@ -462,7 +462,7 @@ public unsafe static class NearBlockchainEnv
     /// Retrieves the current epoch height.
     /// </summary>
     /// <returns>The current epoch height.</returns>
-    public static long GetEpochHeight()
+    public static ulong GetEpochHeight()
     {
         return NearSystemImports.EpochHeight();
     }
@@ -471,7 +471,7 @@ public unsafe static class NearBlockchainEnv
     /// Retrieves the storage usage.
     /// </summary>
     /// <returns>The storage usage.</returns>
-    public static long GetStorageUsage()
+    public static ulong GetStorageUsage()
     {
         return NearSystemImports.StorageUsage();
     }
@@ -565,7 +565,7 @@ public unsafe static class NearBlockchainEnv
         byte[] data = new byte[16];
         fixed (byte* ptr = data)
         {
-            NearSystemImports.AccountBalance((long)ptr);
+            NearSystemImports.AccountBalance((ulong)ptr);
         }
 
         try
@@ -589,7 +589,7 @@ public unsafe static class NearBlockchainEnv
         byte[] data = new byte[16];
         fixed (byte* ptr = data)
         {
-            NearSystemImports.AccountLockedBalance((long)ptr);
+            NearSystemImports.AccountLockedBalance((ulong)ptr);
         }
 
         try
@@ -613,7 +613,7 @@ public unsafe static class NearBlockchainEnv
         byte[] data = new byte[16];
         fixed (byte* ptr = data)
         {
-            NearSystemImports.AttachedDeposit((long)ptr);
+            NearSystemImports.AttachedDeposit((ulong)ptr);
         }
 
         try
@@ -654,7 +654,7 @@ public unsafe static class NearBlockchainEnv
         byte[] messageBytes = Encoding.UTF8.GetBytes(message);
         fixed (byte* ptr = messageBytes)
         {
-            NearSystemImports.LogUtf8(messageBytes.Length, (long)ptr);
+            NearSystemImports.LogUtf8((ulong)messageBytes.Length, (ulong)ptr);
         }
     }
 }
@@ -715,5 +715,5 @@ public struct Uint128
 /// </summary>
 public struct NearGas
 {
-    public long Inner { get; set; }
+    public ulong Inner { get; set; }
 }

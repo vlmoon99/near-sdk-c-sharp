@@ -1,48 +1,67 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace ContractProof;
 
 public unsafe static class SmartContract
 {
     [UnmanagedCallersOnly(EntryPoint = "returnvalue")]
-    public static unsafe void RetunValue()
-    {
-        var (data, type, error) = NearBlockchainEnv.ContractInputRaw();
-        
-        if (error != null)
-        {
-            NearBlockchainEnv.LogString($"Error reading input: {error.Message}");
-            return;
-        }
-
-        string message = "hello world";
-        byte[] utf8Bytes = Encoding.UTF8.GetBytes(message);
-
-        fixed (byte* ptr = utf8Bytes)
-        {
-            NearSystemImports.ValueReturn(utf8Bytes.Length, (long)ptr);
-        }
-    }
+    public static void ReturnValue() => NearSmartContractBuilder.ReturnMethod("hello world");
 
     [UnmanagedCallersOnly(EntryPoint = "helloworld")]
-    public static unsafe void HelloWorld()
+    public static void HelloWorld() => NearSmartContractBuilder.LogMethod("hello world");
+
+    [UnmanagedCallersOnly(EntryPoint = "returnvalueinput")]
+    public static void ReturnValueInput()
     {
-        var (data, type, error) = NearBlockchainEnv.ContractInputRaw();
-        
-        if (error != null)
+        NearSmartContractBuilder.Execute(() =>
         {
-            NearBlockchainEnv.LogString($"Error reading input: {error.Message}");
-            return;
-        }
+            string input = NearSmartContractBuilder.GetInputString();
+            NearSmartContractBuilder.ReturnValue(input);
+        });
+    }
 
-        string message = "hello world";
-        byte[] utf8Bytes = Encoding.UTF8.GetBytes(message);
-
-        fixed (byte* ptr = utf8Bytes)
+    [UnmanagedCallersOnly(EntryPoint = "loginput")]
+    public static void LogInput()
+    {
+        NearSmartContractBuilder.Execute(() =>
         {
-            NearSystemImports.LogUtf8(utf8Bytes.Length, (long)ptr);
-        }
+            string input = NearSmartContractBuilder.GetInputString();
+            NearSmartContractBuilder.Log($"Received input: {input}");
+        });
+    }
+
+    // Example: Custom logic with input
+    [UnmanagedCallersOnly(EntryPoint = "greet")]
+    public static void Greet()
+    {
+        NearSmartContractBuilder.Execute(() =>
+        {
+            string input = NearSmartContractBuilder.GetInputString();
+            string response = $"Hello, {input}!";
+            NearSmartContractBuilder.ReturnValue(response);
+        });
+    }
+
+    // Example: Working with storage
+    [UnmanagedCallersOnly(EntryPoint = "store")]
+    public static void Store()
+    {
+        NearSmartContractBuilder.Execute(() =>
+        {
+            string input = NearSmartContractBuilder.GetInputString();
+            NearSmartContractBuilder.StorageWrite("mykey", input);
+            NearSmartContractBuilder.Log($"Stored: {input}");
+        });
+    }
+
+    [UnmanagedCallersOnly(EntryPoint = "retrieve")]
+    public static void Retrieve()
+    {
+        NearSmartContractBuilder.Execute(() =>
+        {
+            string value = NearSmartContractBuilder.StorageRead("mykey");
+            NearSmartContractBuilder.ReturnValue(value);
+        });
     }
 }

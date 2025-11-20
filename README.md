@@ -208,14 +208,3 @@ https://github.com/near/near-sdk-rs
 
 
 ```
-
-
-
-
-
-
-
-
-
-
-    near contract deploy tutorialneargocli.testnet use-file ./new_sharp.wasm without-init-call network-config testnet sign-with-legacy-keychain send
