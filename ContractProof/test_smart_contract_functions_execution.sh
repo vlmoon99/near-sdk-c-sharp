@@ -2,6 +2,9 @@
 set -e
 
 echo "Test Return Value as-read-only"
+near --teach-me contract call-function as-read-only test.near returnowner json-args {} network-config localnet now
+
+echo "Test Return Value as-read-only"
 near --teach-me contract call-function as-read-only test.near returnvalue json-args {} network-config localnet now
 
 echo "Test Hello World Log as-read-only"

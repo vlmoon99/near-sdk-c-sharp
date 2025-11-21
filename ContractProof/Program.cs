@@ -5,6 +5,11 @@ namespace ContractProof;
 
 public unsafe static class SmartContract
 {
+    public const string owner = "vlmoon.near";
+
+    [UnmanagedCallersOnly(EntryPoint = "returnowner")]
+    public static void ReturnOwner() => NearSmartContractBuilder.ReturnMethod(owner);
+
     [UnmanagedCallersOnly(EntryPoint = "returnvalue")]
     public static void ReturnValue() => NearSmartContractBuilder.ReturnMethod("hello world");
 
@@ -31,7 +36,6 @@ public unsafe static class SmartContract
         });
     }
 
-    // Example: Custom logic with input
     [UnmanagedCallersOnly(EntryPoint = "greet")]
     public static void Greet()
     {
@@ -43,7 +47,6 @@ public unsafe static class SmartContract
         });
     }
 
-    // Example: Working with storage
     [UnmanagedCallersOnly(EntryPoint = "store")]
     public static void Store()
     {

@@ -18,18 +18,18 @@ dotnet new console -n ContractProof
 
 2.1 Set output type from
 
-```csharp
+```xml
     <OutputType>Exe</OutputType>
 ```
 to
 
-```csharp
+```xml
     <OutputType>library</OutputType>
 ```
 
 2.2 Add nesessary props for small size wasm output 
 
-```csharp
+```xml
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DebugType>none</DebugType>
     <InvariantGlobalization>true</InvariantGlobalization>
@@ -47,14 +47,24 @@ to
 
 2.3 Add Native AOT LLVM Compiler to the project
 
-```csharp
+```xml
   <ItemGroup>
     <PackageReference Include="Microsoft.DotNet.ILCompiler.LLVM" Version="10.0.0-*" />
     <PackageReference Include="runtime.$(NETCoreSdkPortableRuntimeIdentifier).Microsoft.DotNet.ILCompiler.LLVM" Version="10.0.0-*" />
   </ItemGroup>
 ```
 
-2.4 Add nuget.config with next properties
+2.4 Add WASI stubs for our build system , because if we will not have clean env imports in our wasm file - this file cannot to be deployed on the Near Blockchain. 
+Only Near Blockchain env imports can be in WASM file. U can also use this tactics in other fileds when u will need to have clean env functions.
+
+```xml
+  <ItemGroup>
+    <NativeLibrary Include="stubs.o" />
+    <CustomLinkerArg Include="-Wl,--component-type $(MSBuildProjectDirectory)/smartcontract.wit" />
+  </ItemGroup>
+```
+
+2.5 Add nuget.config with next properties
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -66,6 +76,7 @@ to
   </packageSources>
 </configuration>
 ```
+
 
 It was the initital setup of the project, in the future we will return in our csproj file for future optimizations of wasi build
 
@@ -89,5 +100,250 @@ So taking it into account we need to write our functions small, efficient, for c
 After a little theoretical inforamtion we are able to get into writing our first smart contract code.
 
 ```csharp
+using System;
+using System.Runtime.InteropServices;
 
+namespace ContractProof;
+
+public unsafe static class SmartContract
+{
+    public const string owner = "vlmoon.near";
+
+    [UnmanagedCallersOnly(EntryPoint = "returnowner")]
+    public static void ReturnOwner() => NearSmartContractBuilder.ReturnMethod(owner);
+
+    [UnmanagedCallersOnly(EntryPoint = "returnvalue")]
+    public static void ReturnValue() => NearSmartContractBuilder.ReturnMethod("hello world");
+
+    [UnmanagedCallersOnly(EntryPoint = "helloworld")]
+    public static void HelloWorld() => NearSmartContractBuilder.LogMethod("hello world");
+
+    [UnmanagedCallersOnly(EntryPoint = "returnvalueinput")]
+    public static void ReturnValueInput()
+    {
+        NearSmartContractBuilder.Execute(() =>
+        {
+            string input = NearSmartContractBuilder.GetInputString();
+            NearSmartContractBuilder.ReturnValue(input);
+        });
+    }
+
+    [UnmanagedCallersOnly(EntryPoint = "loginput")]
+    public static void LogInput()
+    {
+        NearSmartContractBuilder.Execute(() =>
+        {
+            string input = NearSmartContractBuilder.GetInputString();
+            NearSmartContractBuilder.Log($"Received input: {input}");
+        });
+    }
+
+    [UnmanagedCallersOnly(EntryPoint = "greet")]
+    public static void Greet()
+    {
+        NearSmartContractBuilder.Execute(() =>
+        {
+            string input = NearSmartContractBuilder.GetInputString();
+            string response = $"Hello, {input}!";
+            NearSmartContractBuilder.ReturnValue(response);
+        });
+    }
+
+    [UnmanagedCallersOnly(EntryPoint = "store")]
+    public static void Store()
+    {
+        NearSmartContractBuilder.Execute(() =>
+        {
+            string input = NearSmartContractBuilder.GetInputString();
+            NearSmartContractBuilder.StorageWrite("mykey", input);
+            NearSmartContractBuilder.Log($"Stored: {input}");
+        });
+    }
+
+    [UnmanagedCallersOnly(EntryPoint = "retrieve")]
+    public static void Retrieve()
+    {
+        NearSmartContractBuilder.Execute(() =>
+        {
+            string value = NearSmartContractBuilder.StorageRead("mykey");
+            NearSmartContractBuilder.ReturnValue(value);
+        });
+    }
+}
+```
+
+5. Smart Contract Structure :
+
+1.Basic Classes on top of which all things works in smart contract building  which include 3 leveles.
+
+```csharp
+class NearSmartContractBuilder {} - helpful class for building smart contract , level 3 in this example
+class NearBlockchainEnv {} - implemented enviroment methods of the Near Blockchain , based on NearSystemImports
+class NearSystemImports {}  - Near Blockchain System Method mappings, get system methods of the Bear Blockhain which we can call inside our Smart Contract
+```
+
+2.Smart contract structure
+
+```csharp
+public unsafe static class SmartContract
+{
+    public const string owner = "vlmoon.near";
+    ... other  smart contract structure fields ,
+    each fields cost some storage to store, more u wanna store the more u need to pay for ur smart contract
+}
+```
+
+3.Smart Contract functions
+
+On chain we have 2 types of the functiosn - view (read any data) - it's free for every client
+
+```csharp
+public unsafe static class SmartContract
+{
+    public const string owner = "vlmoon.near";
+
+    [UnmanagedCallersOnly(EntryPoint = "returnowner")]
+    public static void ReturnOwner() => NearSmartContractBuilder.ReturnMethod(owner);
+}
+```
+
+And we have write operation (any modifications of the Smart contract storage) whihc must to be paid some sort of gas for the transaction + for the storage which u will ocipied,
+some smart contracts can pay for the user, some smart contract required to attach some mort of the deposit in order t ostore something on a chain.
+In case whene u will delete something from smart contract - u will be able to widtrawl your deposit token for storage from the smart contract.
+
+```csharp
+    [UnmanagedCallersOnly(EntryPoint = "store")]
+    public static void Store()
+    {
+        NearSmartContractBuilder.Execute(() =>
+        {
+            string input = NearSmartContractBuilder.GetInputString();
+            NearSmartContractBuilder.StorageWrite("mykey", input);
+            NearSmartContractBuilder.Log($"Stored: {input}");
+        });
+    }
+
+    [UnmanagedCallersOnly(EntryPoint = "retrieve")]
+    public static void Retrieve()
+    {
+        NearSmartContractBuilder.Execute(() =>
+        {
+            string value = NearSmartContractBuilder.StorageRead("mykey");
+            NearSmartContractBuilder.ReturnValue(value);
+        });
+    }
+```
+
+
+6.Build Code into clean wasm-32-unkown-unkown target
+
+1.Make our build script executable
+```bash
+chmod +x build_smart_contract.sh
+```
+
+2.Run build script
+```bash
+./build_smart_contract.sh
+```
+
+3.Inside build script 
+
+We have a few things whic his related to our Blockchain use case , if u are trying to create clean wasm u dont need to follow this script 1 to 1.
+
+In this script we unbundled our wasi module , take main module with code , change "-" to "_" in improts, it's the WASI limitation we can create env imports with "_",
+transform it back from wat to wasm and vaulya our clean wasm file is ready. we ahve our contract.wasm file whic hsi ready to deploy on the chain
+
+7.Deploy Smart Contract
+
+Before we are gonna deploy our smart contract on chain we must to know a few thigns, for now Near blockhain on the mainnaet adn testnet not support bulk memmory wasm feature,
+it's a reason why right after deploy this samrtcontat.wasm on chain u will have "Deserialization" error, it will be fixed in the new releasese very soon, and for now for testing 
+the idea on C# on a chain we will use localnet network (aka run Near Blockchain local node).
+
+In order to do it start wit hthe next steps :
+
+1.Install Rust
+
+2.Check your RAM avalability (if less than 64gb - create swap 64gb) , because on the last steps of bulding the NearBlockchain node u willl have an error.
+
+3.Clone near core 
+
+```bash
+git clone https://github.com/near/nearcore
+```
+
+4.Build Debug or Release 
+
+```bash
+cargo build
+```
+
+```bash
+cargo build --release
+```
+
+5.Run Near Node
+
+1.Go to the bin folder and find neard bin
+```bash
+cd target/debug/
+```
+
+2.this will init all necessary configs in order to run node localy
+```bash
+./neard init
+```
+
+3.this cmd will run our local node , after we run our node for now we need jsut to check that all things run and we can shut down it for now , because we need to create
+some configuration. 
+```bash
+./neard run
+```
+
+4.As we alredy downlaod and installed near cli in Prerequisites , so we have it instialed and we can create our configurations
+
+We need to setup our cli in order to be able to connect to our local node:
+
+```bash
+cd ~/.config/near-cli
+```
+
+```bash
+nano config.toml
+```
+Add this , or if there will be some config - change it to your localhost - http://127.0.0.1:3030
+
+```config
+[network_connection.localnet]
+network_name = "localnet"
+rpc_url = "http://127.0.0.1:3030"
+wallet_url = "https://app.mynearwallet.com/"
+explorer_transaction_url = "https://explorer.near.org/transactions/"
+```
+
+5.Create keys for smart contract manipulation (deploy , call functions , etc)
+
+```bash
+cd ~/.near/
+```
+in this folder we will have the file validator_key.json
+
+We will need to copy all data in new file call test.near.json + we need to add new key "secret_key" with value of private key , 
+it will be necessary for cli in order to sign tx (You can find an example in ContractProof/test.near.json , 
+but there a keys from my local node, pls take it into account), 
+after we will create this file we can tranfer it to our smartcontract/test-wasm folder 
+(take into account that there alredy some keys with the same names - you will need to delete it before moving your keys).
+
+
+8.Test Smart Contract using Near CLI
+
+Make our test executable . Pls make sure u have near cli installed  and test.near.json keys was generated properly with secretKey key where your private key will be.
+```bash
+chmod +x test_smart_contract_functions_execution.sh
+```
+
+Execute our test, insdie tests we have Read only (free) transactions, and Paybale trasactiosn for read and write operations
+
+```bash
+./test_smart_contract_functions_execution.sh
 ```

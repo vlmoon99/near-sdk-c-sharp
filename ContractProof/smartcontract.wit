@@ -1,6 +1,8 @@
 package smartcontract:component;
 
 world smartcontract {
+
+  export returnowner: func();
   export returnvalue: func();
   export helloworld: func();
   export returnvalueinput: func();
