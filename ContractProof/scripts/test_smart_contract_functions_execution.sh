@@ -20,7 +20,7 @@ echo "Test Greet as-read-only"
 near --teach-me contract call-function as-read-only test.near greet text-args 'Vlad' network-config localnet now
 
 echo "Test Write Operation"
-near --teach-me contract call-function as-transaction test.near store text-args 'TestData' prepaid-gas '100.0 Tgas' attached-deposit '0 NEAR' sign-as test.near network-config localnet sign-with-access-key-file test.near.json send
+near --teach-me contract call-function as-transaction test.near store text-args 'TestData' prepaid-gas '100.0 Tgas' attached-deposit '0 NEAR' sign-as test.near network-config localnet sign-with-access-key-file ./near_creds/test.near.json send
 
 echo "Test Read Operation"
 near --teach-me contract call-function as-read-only test.near retrieve json-args {} network-config localnet now

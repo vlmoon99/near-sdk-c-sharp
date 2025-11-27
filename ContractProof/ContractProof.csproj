@@ -28,8 +28,8 @@
   </ItemGroup>
   
   <ItemGroup>
-    <NativeLibrary Include="stubs.o" />
-    <CustomLinkerArg Include="-Wl,--component-type $(MSBuildProjectDirectory)/smartcontract.wit" />
+    <NativeLibrary Include="stubs/stubs.o" />
+    <CustomLinkerArg Include="-Wl,--component-type $(MSBuildProjectDirectory)/wasi_interfaces_type/smartcontract.wit" />
   </ItemGroup>
 
 </Project>

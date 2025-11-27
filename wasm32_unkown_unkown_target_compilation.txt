@@ -1,11 +1,11 @@
 Prerequisites :
-
-0. Ubuntu x86/64 or arm (native or wsl based) 
-1. Dotnet 10 [https://dotnet.microsoft.com/en-us/download/dotnet/10.0]
-2. Wasi SDK 27 (Dowload from releases and unzip , in the future u will use clang++ from there and it also will be nesessary for dotnet to wasi compilation) [https://github.com/WebAssembly/wasi-sdk]
-3. wasm-tools, wat2wasm tools (Install it using via rust and cargo or find pre-built bin's)
-4. near cli [https://docs.near.org/tools/near-cli#installation]
-
+[
+- Ubuntu x86/64 or arm (native or wsl based) 
+- Dotnet 10 [https://dotnet.microsoft.com/en-us/download/dotnet/10.0]
+- Wasi SDK 27 (Dowload from releases and unzip , in the future u will use clang++ from there and it also will be nesessary for dotnet to wasi compilation) [https://github.com/WebAssembly/wasi-sdk]
+- wasm-tools, wat2wasm tools (Install it using via rust and cargo or find pre-built bin's)
+- near cli [https://docs.near.org/tools/near-cli#installation]
+]
 
 Steps :
 
@@ -56,11 +56,12 @@ to
 
 2.4 Add WASI stubs for our build system , because if we will not have clean env imports in our wasm file - this file cannot to be deployed on the Near Blockchain. 
 Only Near Blockchain env imports can be in WASM file. U can also use this tactics in other fileds when u will need to have clean env functions.
+Also here we are define our WIT(Wasi Interface Type) for strcit import and export for our clean wasm compilation.
 
 ```xml
   <ItemGroup>
-    <NativeLibrary Include="stubs.o" />
-    <CustomLinkerArg Include="-Wl,--component-type $(MSBuildProjectDirectory)/smartcontract.wit" />
+    <NativeLibrary Include="stubs/stubs.o" />
+    <CustomLinkerArg Include="-Wl,--component-type $(MSBuildProjectDirectory)/wasi_interfaces_type/smartcontract.wit" />
   </ItemGroup>
 ```
 
@@ -83,14 +84,14 @@ It was the initital setup of the project, in the future we will return in our cs
 
 3.Write Smart Contract which will later on we will compile to the clean wasm target. If u are new to the Blockchain technology and smart contract developemnt, I advie to read a little bit about it on the Near Blockchain docs website Basics[https://docs.near.org/protocol/basics] Smart Contract Developemnt[https://docs.near.org/smart-contracts/what-is].
 But I Will try to make it simple  to write this few sentences for fully underestending what we will write the next :
-1.Each Smart Contract represents a code which stores on the Blockhain nodes and other users can execute this code.
-2.Each Smart Contract has some sort of native functions (aka native functions(File System, Networing, Time, Cryptography) on Linux,Windows,Mac os ) and u can use this Blockhcain native Fucntions inside smart contract
-3.The basic things which blockhcain can do insdie smart contract functions - 
-[1.write/read data, 
- 2.call native blockhcain cryptography functiosn , 
- 3.call other smart contracts, 
- 4.get block time, 
- 5.get tx information (who sign tx , who will recive it , how much gas user has to spend, how much deposit user attatch to the tx, what the input of the user)
+3.1.Each Smart Contract represents a code which stores on the Blockhain nodes and other users can execute this code.
+3.2.Each Smart Contract has some sort of native functions (aka native functions(File System, Networing, Time, Cryptography) on Linux,Windows,Mac os ) and u can use this Blockhcain native Fucntions inside smart contract
+3.3.The basic things which blockhcain can do insdie smart contract functions - 
+[- write/read data, 
+ - call native blockhcain cryptography functiosn , 
+ - call other smart contracts, 
+ - get block time, 
+ - get tx information (who sign tx , who will recive it , how much gas user has to spend, how much deposit user attatch to the tx, what the input of the user)
 ]
 
 4.Each Tx on a chain cost money(Near Tokens) in one word it called Gas which is means how much computatonal resources blockchain node spends in order to execute your functions, each data which was stored also cost tokens which is 100kb per NEAR token .
@@ -174,7 +175,7 @@ public unsafe static class SmartContract
 
 5. Smart Contract Structure :
 
-1.Basic Classes on top of which all things works in smart contract building  which include 3 leveles.
+5.1.Basic Classes on top of which all things works in smart contract building  which include 3 leveles.
 
 ```csharp
 class NearSmartContractBuilder {} - helpful class for building smart contract , level 3 in this example
@@ -182,7 +183,7 @@ class NearBlockchainEnv {} - implemented enviroment methods of the Near Blockcha
 class NearSystemImports {}  - Near Blockchain System Method mappings, get system methods of the Bear Blockhain which we can call inside our Smart Contract
 ```
 
-2.Smart contract structure
+5.2.Smart contract structure
 
 ```csharp
 public unsafe static class SmartContract
@@ -193,7 +194,7 @@ public unsafe static class SmartContract
 }
 ```
 
-3.Smart Contract functions
+5.3.Smart Contract functions
 
 On chain we have 2 types of the functiosn - view (read any data) - it's free for every client
 
@@ -234,20 +235,19 @@ In case whene u will delete something from smart contract - u will be able to wi
     }
 ```
 
-
 6.Build Code into clean wasm-32-unkown-unkown target
 
-1.Make our build script executable
+6.1.Make our build script executable
 ```bash
-chmod +x build_smart_contract.sh
+chmod +x ./scripts/build_smart_contract.sh
 ```
 
-2.Run build script
+6.2.Run build script
 ```bash
-./build_smart_contract.sh
+./scripts/build_smart_contract.sh
 ```
 
-3.Inside build script 
+6.3.Inside build script 
 
 We have a few things whic his related to our Blockchain use case , if u are trying to create clean wasm u dont need to follow this script 1 to 1.
 
@@ -261,18 +261,18 @@ it's a reason why right after deploy this samrtcontat.wasm on chain u will have 
 the idea on C# on a chain we will use localnet network (aka run Near Blockchain local node).
 
 In order to do it start wit hthe next steps :
+[
+7.1.Install Rust
 
-1.Install Rust
+7.2.Check your RAM avalability (if less than 64gb - create swap 64gb) , because on the last steps of bulding the NearBlockchain node u willl have an error.
 
-2.Check your RAM avalability (if less than 64gb - create swap 64gb) , because on the last steps of bulding the NearBlockchain node u willl have an error.
-
-3.Clone near core 
+7.3.Clone near core 
 
 ```bash
 git clone https://github.com/near/nearcore
 ```
 
-4.Build Debug or Release 
+7.4.Build Debug or Release 
 
 ```bash
 cargo build
@@ -282,25 +282,25 @@ cargo build
 cargo build --release
 ```
 
-5.Run Near Node
+7.5.Run Near Node
 
-1.Go to the bin folder and find neard bin
+Go to the bin folder and find neard bin
 ```bash
 cd target/debug/
 ```
 
-2.this will init all necessary configs in order to run node localy
+this will init all necessary configs in order to run node localy
 ```bash
 ./neard init
 ```
 
-3.this cmd will run our local node , after we run our node for now we need jsut to check that all things run and we can shut down it for now , because we need to create
+this cmd will run our local node , after we run our node for now we need jsut to check that all things run and we can shut down it for now , because we need to create
 some configuration. 
 ```bash
 ./neard run
 ```
 
-4.As we alredy downlaod and installed near cli in Prerequisites , so we have it instialed and we can create our configurations
+As we alredy downlaod and installed near cli in Prerequisites , so we have it instialed and we can create our configurations
 
 We need to setup our cli in order to be able to connect to our local node:
 
@@ -321,7 +321,7 @@ wallet_url = "https://app.mynearwallet.com/"
 explorer_transaction_url = "https://explorer.near.org/transactions/"
 ```
 
-5.Create keys for smart contract manipulation (deploy , call functions , etc)
+7.6.Create keys for smart contract manipulation (deploy , call functions , etc)
 
 ```bash
 cd ~/.near/
@@ -329,21 +329,35 @@ cd ~/.near/
 in this folder we will have the file validator_key.json
 
 We will need to copy all data in new file call test.near.json + we need to add new key "secret_key" with value of private key , 
-it will be necessary for cli in order to sign tx (You can find an example in ContractProof/test.near.json , 
+it will be necessary for cli in order to sign tx (You can find an example in ContractProof/near_creds/test.near.json , 
 but there a keys from my local node, pls take it into account), 
 after we will create this file we can tranfer it to our smartcontract/test-wasm folder 
 (take into account that there alredy some keys with the same names - you will need to delete it before moving your keys).
 
+7.7.Run our local node again 
+```bash
+./neard run
+```
+
+7.8.Deploy our smart contract on the localchain
+```bash
+chmod +x ./scripts/deploy_smart_contract.sh
+```
+
+```bash
+./scripts/deploy_smart_contract.sh
+```
+]
 
 8.Test Smart Contract using Near CLI
 
 Make our test executable . Pls make sure u have near cli installed  and test.near.json keys was generated properly with secretKey key where your private key will be.
 ```bash
-chmod +x test_smart_contract_functions_execution.sh
+chmod +x ./scripts/test_smart_contract_functions_execution.sh
 ```
 
 Execute our test, insdie tests we have Read only (free) transactions, and Paybale trasactiosn for read and write operations
 
 ```bash
-./test_smart_contract_functions_execution.sh
+./scripts/test_smart_contract_functions_execution.sh
 ```

@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 set -e
 
+echo "Current dir:"
+pwd
+
 echo "Build Wasm"
 dotnet publish -r wasi-wasm
 
-echo "Current dir:"
-pwd
 
 PUBLISH_DIR="./bin/Release/net10.0/wasi-wasm/publish"
 echo "Changing directory to: $PUBLISH_DIR"
