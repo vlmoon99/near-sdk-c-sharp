@@ -1,36 +1,35 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
     <OutputType>library</OutputType>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TargetFramework>net10.0</TargetFramework>
 
+    <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
+
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DebugType>none</DebugType>
     <InvariantGlobalization>true</InvariantGlobalization>
     <StackTraceSupport>false</StackTraceSupport>
     <OptimizationPreference>Size</OptimizationPreference>
-    
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     <ILLinkTreatWarningsAsErrors>false</ILLinkTreatWarningsAsErrors>
     <TrimmerRemoveSymbols>true</TrimmerRemoveSymbols>
     <DebuggerSupport>false</DebuggerSupport>
-
     <PublishTrimmed>true</PublishTrimmed>
     <SelfContained>true</SelfContained>
-
     <IlcGenerateMstatFile>true</IlcGenerateMstatFile>
     <IlcGenerateDgmlFile>true</IlcGenerateDgmlFile>
+
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.DotNet.ILCompiler.LLVM" Version="10.0.0-*" />
     <PackageReference Include="runtime.$(NETCoreSdkPortableRuntimeIdentifier).Microsoft.DotNet.ILCompiler.LLVM" Version="10.0.0-*" />
   </ItemGroup>
-
+  
   <ItemGroup>
-    <NativeLibrary Include="stubs.o" />
-    <CustomLinkerArg Include="-Wl,--component-type $(MSBuildProjectDirectory)/smartcontract.wit" />
+    <NativeLibrary Include="stubs/stubs.o" />
+    <CustomLinkerArg Include="-Wl,--component-type $(MSBuildProjectDirectory)/wasi_interfaces_type/smartcontract.wit" />
   </ItemGroup>
-
 
 </Project>

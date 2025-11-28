@@ -1,0 +1,109 @@
+package smartcontract:component;
+
+world smartcontract {
+
+  export returnowner: func();
+  export returnvalue: func();
+  export helloworld: func();
+  export returnvalueinput: func();
+  export loginput: func();
+  export greet: func();
+  export store: func();
+  export retrieve: func();
+
+
+  import env: interface {
+    // Register operations
+    read-register: func(register-id: u64, ptr: u64);
+    register-len: func(register-id: u64) -> u64;
+    write-register: func(register-id: u64, data-len: u64, data-ptr: u64);
+    
+    // Storage operations
+    storage-write: func(key-len: u64, key-ptr: u64, value-len: u64, value-ptr: u64, register-id: u64) -> u64;
+    storage-read: func(key-len: u64, key-ptr: u64, register-id: u64) -> u64;
+    storage-remove: func(key-len: u64, key-ptr: u64, register-id: u64) -> u64;
+    storage-has-key: func(key-len: u64, key-ptr: u64) -> u64;
+    
+    // Account operations
+    current-account-id: func(register-id: u64);
+    signer-account-id: func(register-id: u64);
+    signer-account-pk: func(register-id: u64);
+    predecessor-account-id: func(register-id: u64);
+    
+    // Input operations
+    input: func(register-id: u64);
+    
+    // Block operations
+    block-index: func() -> u64;
+    block-timestamp: func() -> u64;
+    epoch-height: func() -> u64;
+    
+    // Storage and balance operations
+    storage-usage: func() -> u64;
+    account-balance: func(balance-ptr: u64);
+    account-locked-balance: func(balance-ptr: u64);
+    attached-deposit: func(balance-ptr: u64);
+    
+    // Gas operations
+    prepaid-gas: func() -> u64;
+    used-gas: func() -> u64;
+    
+    // Random operations
+    random-seed: func(register-id: u64);
+    
+    // Cryptographic hash operations
+    sha256: func(value-len: u64, value-ptr: u64, register-id: u64);
+    keccak256: func(value-len: u64, value-ptr: u64, register-id: u64);
+    keccak512: func(value-len: u64, value-ptr: u64, register-id: u64);
+    ripemd160: func(value-len: u64, value-ptr: u64, register-id: u64);
+    
+    // Cryptographic signature operations
+    ecrecover: func(hash-len: u64, hash-ptr: u64, sig-len: u64, sig-ptr: u64, v: u64, malleability-flag: u64, register-id: u64) -> u64;
+    ed25519-verify: func(sig-len: u64, sig-ptr: u64, msg-len: u64, msg-ptr: u64, pub-key-len: u64, pub-key-ptr: u64) -> u64;
+    
+    // Alt BN128 operations
+    alt-bn128-g1-multiexp: func(value-len: u64, value-ptr: u64, register-id: u64);
+    alt-bn128-g1-sum: func(value-len: u64, value-ptr: u64, register-id: u64);
+    alt-bn128-pairing-check: func(value-len: u64, value-ptr: u64) -> u64;
+    
+    // Validator operations
+    validator-stake: func(account-id-len: u64, account-id-ptr: u64, stake-ptr: u64);
+    validator-total-stake: func(stake-ptr: u64);
+    
+    // Return and logging operations
+    value-return: func(value-len: u64, value-ptr: u64);
+    panic-utf8: func(len: u64, ptr: u64);
+    log-utf8: func(len: u64, ptr: u64);
+    log-utf16: func(len: u64, ptr: u64);
+    
+    // Promise operations
+    promise-create: func(account-id-len: u64, account-id-ptr: u64, function-name-len: u64, function-name-ptr: u64, arguments-len: u64, arguments-ptr: u64, amount-ptr: u64, gas: u64) -> u64;
+    promise-then: func(promise-index: u64, account-id-len: u64, account-id-ptr: u64, function-name-len: u64, function-name-ptr: u64, arguments-len: u64, arguments-ptr: u64, amount-ptr: u64, gas: u64) -> u64;
+    promise-and: func(promise-idx-ptr: u64, promise-idx-count: u64) -> u64;
+    
+    // Promise batch operations
+    promise-batch-create: func(account-id-len: u64, account-id-ptr: u64) -> u64;
+    promise-batch-then: func(promise-index: u64, account-id-len: u64, account-id-ptr: u64) -> u64;
+    
+    // Promise batch actions
+    promise-batch-action-create-account: func(promise-index: u64);
+    promise-batch-action-deploy-contract: func(promise-index: u64, code-len: u64, code-ptr: u64);
+    promise-batch-action-function-call: func(promise-index: u64, function-name-len: u64, function-name-ptr: u64, arguments-len: u64, arguments-ptr: u64, amount-ptr: u64, gas: u64);
+    promise-batch-action-function-call-weight: func(promise-index: u64, function-name-len: u64, function-name-ptr: u64, arguments-len: u64, arguments-ptr: u64, amount-ptr: u64, gas: u64, weight: u64);
+    promise-batch-action-transfer: func(promise-index: u64, amount-ptr: u64);
+    promise-batch-action-stake: func(promise-index: u64, amount-ptr: u64, public-key-len: u64, public-key-ptr: u64);
+    promise-batch-action-add-key-with-full-access: func(promise-index: u64, public-key-len: u64, public-key-ptr: u64, nonce: u64);
+    promise-batch-action-add-key-with-function-call: func(promise-index: u64, public-key-len: u64, public-key-ptr: u64, nonce: u64, allowance-ptr: u64, receiver-id-len: u64, receiver-id-ptr: u64, function-names-len: u64, function-names-ptr: u64);
+    promise-batch-action-delete-key: func(promise-index: u64, public-key-len: u64, public-key-ptr: u64);
+    promise-batch-action-delete-account: func(promise-index: u64, beneficiary-id-len: u64, beneficiary-id-ptr: u64);
+    
+    // Promise yield operations
+    promise-yield-create: func(function-name-len: u64, function-name-ptr: u64, arguments-len: u64, arguments-ptr: u64, gas: u64, gas-weight: u64, register-id: u64) -> u64;
+    promise-yield-resume: func(data-id-len: u64, data-id-ptr: u64, payload-len: u64, payload-ptr: u64) -> u32;
+    
+    // Promise result operations
+    promise-results-count: func() -> u64;
+    promise-result: func(result-idx: u64, register-id: u64) -> u64;
+    promise-return: func(promise-id: u64);
+  }
+}
