@@ -1,210 +1,386 @@
-# If u want to contribute write me on :
+# Building NEAR Smart Contracts with C# and .NET
+
+This guide walks you through creating, compiling, and deploying smart contracts on the NEAR blockchain using C# and .NET 10.
+
+## Prerequisites
+
+Before starting, install these tools:
+
+1. **Ubuntu x86/64 or ARM** (native or WSL)
+2. **[.NET 10 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)**
+3. **[WASI SDK 27](https://github.com/WebAssembly/wasi-sdk/releases)** - Download and extract (you'll use `clang++` from here for .NET to WASI compilation)
+4. **wasm-tools & wat2wasm** - Install via Rust/Cargo or find pre-built binaries
+5. **[NEAR CLI](https://docs.near.org/tools/near-cli#installation)**
+
+## Steps
+
+### 1. Create Empty Project
+
+```bash
+dotnet new console -n ContractProof
 ```
-Telegram : @vlmoon99 or @vlmoon77
-Discord : @vlad_mykolaienko
-Twitter : @vlmoon99
-Gmail : vlmoon.near@gmail.com
-```
-# Main Goal Of This Project 
-```
-Create Proof of Concept "Smart Contract" compiled from C# for Near Blokchain  and call log("Hello World") on the blockchain side
-```
-# What already achived
-```
-1.Small size of wasm.
-2.Clear "env" imports.
-3.Pass serilazition.
-4.Pass deserilazition on wasmtime runtime + enabled bulk memmory on the host machine.
-5.Be able to call smart contract (but with unreachable code for now , and it's a main problem). 
+
+### 2. Configure csproj File
+
+#### 2.1 Set Output Type
+
+Change from:
+```xml
+<OutputType>Exe</OutputType>
 ```
 
-# Understand the structure of the repository :
+to:
+```xml
+<OutputType>library</OutputType>
 ```
-1. smartcontract folder - it's c# .net project which we compile to the wasm
-2. test-wasm 
-(Currenty we can't use it for test, because we cant enable bulk memmory support there, it's possible only inside nearcore aka Near Blockchain Node) 
-- it's rust project where we use near_workspaces package in order to upload our wasm to the blockchain in emulation mode , but we will have all possible errors and return results as we do this on real blockchain.
+
+#### 2.2 Add Necessary Props for Small Size WASM Output
+
+```xml
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>none</DebugType>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <StackTraceSupport>false</StackTraceSupport>
+    <OptimizationPreference>Size</OptimizationPreference>
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <ILLinkTreatWarningsAsErrors>false</ILLinkTreatWarningsAsErrors>
+    <TrimmerRemoveSymbols>true</TrimmerRemoveSymbols>
+    <DebuggerSupport>false</DebuggerSupport>
+    <PublishTrimmed>true</PublishTrimmed>
+    <SelfContained>true</SelfContained>
+    <IlcGenerateMstatFile>true</IlcGenerateMstatFile>
+    <IlcGenerateDgmlFile>true</IlcGenerateDgmlFile>
 ```
-# How to compile and test the smart contract (Simple using mocks and wasmtime)
+
+#### 2.3 Add Native AOT LLVM Compiler to the Project
+
+```xml
+  <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.ILCompiler.LLVM" Version="10.0.0-*" />
+    <PackageReference Include="runtime.$(NETCoreSdkPortableRuntimeIdentifier).Microsoft.DotNet.ILCompiler.LLVM" Version="10.0.0-*" />
+  </ItemGroup>
 ```
-1. Download and install : .net 9.0, wasi 24 or 25 version, rust
 
-2. Go to the smartcontract folder : 
+#### 2.4 Add WASI Stubs
 
-cd smartcontract
+Add WASI stubs for the build system. If we don't have clean env imports in our WASM file, this file cannot be deployed on the NEAR Blockchain. Only NEAR Blockchain env imports can be in the WASM file. You can also use this tactic in other fields when you need to have clean env functions. Here we're defining our WIT (WASI Interface Type) for strict import and export for our clean WASM compilation.
 
-3. Create stubs for our wasm file using clang++ from wasi sdk (It's important to use clang++ from wasi folder) :
-
-/wasi-sdk-24.0-x86_64-linux/bin/clang++ stubs.cpp -o stubs.o -c
-
-We stubs our wasi import from env in order to pass serialization when smart contract is uploading on the Blockchain
-
-4. Run build using nativeaot-llvm .net compiler and produce our optimized wasm file which is less than 1mb in size :
-
-dotnet publish -r wasi-wasm /p:DebugType=none /p:InvariantGlobalization=true /p:OptimizationPreference=Size /p:StackTraceSupport=false
-
-
-5.Unbundle our outcome "smartcontract.wasm" because Near Blockchain doesn't support wasi components , only clear wasm modules
-
-wasm-tools component unbundle smartcontract.wasm --module-dir ./
-
-This command will produce -> 
-
-smartcontract.deps.json  smartcontract.wasm  unbundled-module0.wasm
-
-unbundled-module0.wasm - it's our clean wasm component
-
-
-6.But it's not the end, and the problem is - near blockchain has imports like "log_utf8" , but in .wit format where we provide our "imports" and "exports", we can't use underscore "_" , so now we can only transform our wasm component to wat , chage "-" to "_" mannualy and make wat2wasm conversion
-
-wasm2wat unbundled-module0.wasm -o test.wat
-
-Make hand transformation(in a future we will create an automatic script but now we can only make it by our hands)
-
-wat2wasm test.wat -o test.wasm
-
-
-7. In order to test wasm file in "lite mode" we can use near-sdk-c-sharp/smartcontract/test-wasm/testwasm.ipynb wherein we will use wasmtime runtime which is used in Near Blockchain , so we can mock our "env" methods
-and see if there will be some errors, if there no errors - we can go to the advance testing and up and running our local Near Blockchain Node.
-
-
+```xml
+  <ItemGroup>
+    <NativeLibrary Include="stubs/stubs.o" />
+    <CustomLinkerArg Include="-Wl,--component-type $(MSBuildProjectDirectory)/wasi_interfaces_type/smartcontract.wit" />
+  </ItemGroup>
 ```
-# How to compile and test the smart contract (Advance using Local Node)
+
+#### 2.5 Add nuget.config with Next Properties
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <clear />
+    <add key="nuget" value="https://api.nuget.org/v3/index.json" />
+    <add key="dotnet-experimental" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-experimental/nuget/v3/index.json" />
+  </packageSources>
+</configuration>
 ```
-1. Download and install : .net 9.0, wasi 24 or 25 version, rust
-
-2. Go to the smartcontract folder : 
-
-cd smartcontract
-
-3. Create stubs for our wasm file using clang++ from wasi sdk (It's important to use clang++ from wasi folder) :
-
-/wasi-sdk-24.0-x86_64-linux/bin/clang++ stubs.cpp -o stubs.o -c
-
-We stubs our wasi import from env in order to pass serialization when smart contract is uploading on the Blockchain
-
-4. Run build using nativeaot-llvm .net compiler and produce our optimized wasm file which is less than 1mb in size :
-
-dotnet publish -r wasi-wasm /p:DebugType=none /p:InvariantGlobalization=true /p:OptimizationPreference=Size /p:StackTraceSupport=false
 
 
-5.Unbundle our outcome "smartcontract.wasm" because Near Blockchain doesn't support wasi components , only clear wasm modules
+This was the initial setup of the project. In the future we will return to our csproj file for future optimizations of WASI build.
 
-wasm-tools component unbundle smartcontract.wasm --module-dir ./
+### 3. Write Smart Contract
 
-This command will produce -> 
+We'll write a Smart Contract which we will later compile to the clean WASM target. If you're new to blockchain technology and smart contract development, I advise reading a bit about it on the NEAR Blockchain docs website:
+- [Basics](https://docs.near.org/protocol/basics)
+- [Smart Contract Development](https://docs.near.org/smart-contracts/what-is)
 
-smartcontract.deps.json  smartcontract.wasm  unbundled-module0.wasm
+I'll try to make it simple with these few sentences for full understanding of what we'll write next:
 
-unbundled-module0.wasm - it's our clean wasm component
+#### 3.1 Smart Contract Basics
 
+Each Smart Contract represents code which is stored on the blockchain nodes and other users can execute this code.
 
-6.But it's not the end, and the problem is - near blockchain has imports like "log_utf8" , but in .wit format where we provide our "imports" and "exports", we can't use underscore "_" , so now we can only transform our wasm component to wat , chage "-" to "_" mannualy and make wat2wasm conversion
+#### 3.2 Native Functions
 
-wasm2wat unbundled-module0.wasm -o test.wat
+Each Smart Contract has some sort of native functions (like native functions such as File System, Networking, Time, Cryptography on Linux, Windows, Mac OS) and you can use these blockchain native functions inside smart contract.
 
-Make hand transformation(in a future we will create an automatic script but now we can only make it by our hands)
+#### 3.3 What Blockchain Can Do Inside Smart Contract Functions
 
-wat2wasm test.wat -o test.wasm
+- Write/read data
+- Call native blockchain cryptography functions
+- Call other smart contracts
+- Get block time
+- Get tx information (who signs tx, who will receive it, how much gas user has to spend, how much deposit user attaches to the tx, what the input of the user)
 
+### 4. Gas and Storage Costs
 
-7.Our wasm is ready for uploading it to the blockchain for testing, now we need to clone nearcore repositoty which is represents Near Blockchain Node
+Each tx on a chain costs money (NEAR Tokens). In one word it's called Gas, which means how much computational resources blockchain node spends in order to execute your functions. Each data which is stored also costs tokens, which is 100kb per NEAR token. So taking this into account we need to write our functions small, efficient, for cheapest and fastest transaction.
 
+After a little theoretical information we are able to get into writing our first smart contract code.
+
+```csharp
+using System;
+using System.Runtime.InteropServices;
+
+namespace ContractProof;
+
+public unsafe static class SmartContract
+{
+    public const string owner = "vlmoon.near";
+
+    [UnmanagedCallersOnly(EntryPoint = "returnowner")]
+    public static void ReturnOwner() => NearSmartContractBuilder.ReturnMethod(owner);
+
+    [UnmanagedCallersOnly(EntryPoint = "returnvalue")]
+    public static void ReturnValue() => NearSmartContractBuilder.ReturnMethod("hello world");
+
+    [UnmanagedCallersOnly(EntryPoint = "helloworld")]
+    public static void HelloWorld() => NearSmartContractBuilder.LogMethod("hello world");
+
+    [UnmanagedCallersOnly(EntryPoint = "returnvalueinput")]
+    public static void ReturnValueInput()
+    {
+        NearSmartContractBuilder.Execute(() =>
+        {
+            string input = NearSmartContractBuilder.GetInputString();
+            NearSmartContractBuilder.ReturnValue(input);
+        });
+    }
+
+    [UnmanagedCallersOnly(EntryPoint = "loginput")]
+    public static void LogInput()
+    {
+        NearSmartContractBuilder.Execute(() =>
+        {
+            string input = NearSmartContractBuilder.GetInputString();
+            NearSmartContractBuilder.Log($"Received input: {input}");
+        });
+    }
+
+    [UnmanagedCallersOnly(EntryPoint = "greet")]
+    public static void Greet()
+    {
+        NearSmartContractBuilder.Execute(() =>
+        {
+            string input = NearSmartContractBuilder.GetInputString();
+            string response = $"Hello, {input}!";
+            NearSmartContractBuilder.ReturnValue(response);
+        });
+    }
+
+    [UnmanagedCallersOnly(EntryPoint = "store")]
+    public static void Store()
+    {
+        NearSmartContractBuilder.Execute(() =>
+        {
+            string input = NearSmartContractBuilder.GetInputString();
+            NearSmartContractBuilder.StorageWrite("mykey", input);
+            NearSmartContractBuilder.Log($"Stored: {input}");
+        });
+    }
+
+    [UnmanagedCallersOnly(EntryPoint = "retrieve")]
+    public static void Retrieve()
+    {
+        NearSmartContractBuilder.Execute(() =>
+        {
+            string value = NearSmartContractBuilder.StorageRead("mykey");
+            NearSmartContractBuilder.ReturnValue(value);
+        });
+    }
+}
+```
+
+### 5. Smart Contract Structure
+
+#### 5.1 Basic Classes
+
+These are the classes on top of which all things work in smart contract building, which include 3 levels:
+
+```csharp
+class NearSmartContractBuilder {} // Helpful class for building smart contract, level 3 in this example
+class NearBlockchainEnv {}        // Implemented environment methods of the NEAR Blockchain, based on NearSystemImports
+class NearSystemImports {}        // NEAR Blockchain System Method mappings, get system methods of the NEAR Blockchain which we can call inside our Smart Contract
+```
+
+#### 5.2 Smart Contract Structure
+
+```csharp
+public unsafe static class SmartContract
+{
+    public const string owner = "vlmoon.near";
+    // ...other smart contract structure fields
+    // Each field costs some storage to store, more you want to store the more you need to pay for your smart contract
+}
+```
+
+#### 5.3 Smart Contract Functions
+
+On chain we have 2 types of functions:
+
+**View (read any data) - it's free for every client:**
+
+```csharp
+public unsafe static class SmartContract
+{
+    public const string owner = "vlmoon.near";
+    
+    [UnmanagedCallersOnly(EntryPoint = "returnowner")]
+    public static void ReturnOwner() => NearSmartContractBuilder.ReturnMethod(owner);
+}
+```
+
+**Write operation (any modifications of the Smart Contract storage)** which must be paid some sort of gas for the transaction plus for the storage which you will occupy. Some smart contracts can pay for the user, some smart contracts require attaching some sort of deposit in order to store something on a chain. In case when you delete something from smart contract, you will be able to withdraw your deposit token for storage from the smart contract.
+
+```csharp
+[UnmanagedCallersOnly(EntryPoint = "store")]
+public static void Store()
+{
+    NearSmartContractBuilder.Execute(() =>
+    {
+        string input = NearSmartContractBuilder.GetInputString();
+        NearSmartContractBuilder.StorageWrite("mykey", input);
+        NearSmartContractBuilder.Log($"Stored: {input}");
+    });
+}
+
+[UnmanagedCallersOnly(EntryPoint = "retrieve")]
+public static void Retrieve()
+{
+    NearSmartContractBuilder.Execute(() =>
+    {
+        string value = NearSmartContractBuilder.StorageRead("mykey");
+        NearSmartContractBuilder.ReturnValue(value);
+    });
+}
+```
+
+### 6. Build Code into Clean wasm-32-unknown-unknown Target
+
+#### 6.1 Make Our Build Script Executable
+
+```bash
+chmod +x ./scripts/build_smart_contract.sh
+```
+
+#### 6.2 Run Build Script
+
+```bash
+./scripts/build_smart_contract.sh
+```
+
+#### 6.3 Inside Build Script
+
+We have a few things which are related to our blockchain use case. If you're trying to create clean WASM you don't need to follow this script 1 to 1. In this script we unbundle our WASI module, take main module with code, change "-" to "_" in imports (it's the WASI limitation we can create env imports with "_"), transform it back from WAT to WASM and voilà, our clean WASM file is ready. We have our contract.wasm file which is ready to deploy on the chain.
+
+### 7. Deploy Smart Contract
+
+Before we're gonna deploy our smart contract on chain we must know a few things. For now NEAR blockchain on the mainnet and testnet does not support bulk memory WASM feature. It's the reason why right after deploying this smart contract.wasm on chain you will have a "Deserialization" error. It will be fixed in new releases very soon(1+ month), and for now for testing the idea of C# on a chain we will use localnet network (run NEAR Blockchain local node). In order to do it, start with the next steps:
+
+#### 7.1 Install Rust
+
+#### 7.2 Check Your RAM Availability
+
+If less than 64GB, create swap 64GB, because on the last steps of building the NEAR Blockchain node you will have an error.
+
+#### 7.3 Clone NEAR Core
+
+```bash
 git clone https://github.com/near/nearcore
+```
 
-Last release was 2.4.0, so we need to make checkout on this version
+#### 7.4 Build Debug or Release
 
-git checkout 2.4.0
-
-8.Go to the nearcore directory and change the settings in order to enable bulk memmory support + enable wasitime enviroment by default,
-I created a git patch with all necessary changes in order to see all necessary logs and enable wasitime runtime and memmory bulk support
-
-cd nearcore
-
-git apply csharpsdk.patch
-
-9.After we have all necessary changes insdie nearcore repo , we can start to build our Near Blockchain node, we will do it locally on our PC :
-
-cargo build --release (Release) 
-or 
-cargo build (Debug)
-
-In process of building this node you can have a lot of errors, but they can happen only in two way's - you dont have some necessary build dependecy (clang,make,build-essentials, etc) or you will not have enough memmory for compilation
-
-If you dont have enough memmory for compilation - create swap with 40G of memmory, it help me on my laptop (24gb ram) , while on 128g ram workstation I build it without any swap.
-
-10.We will need to initialize our node and make test run before we will upload our smartcontract there
-
-cd /nearcore/target/release (If we build node in release mode)
+```bash
+cargo build
+```
 
 or
 
-cd /nearcore/target/debug  (If we build node in debug mode)
+```bash
+cargo build --release
+```
 
-./neard init - this will init all necessary configs in order to run node localy 
-./neard run - this cmd will run our local node
+#### 7.5 Run NEAR Node
 
+Go to the bin folder and find neard bin:
 
+```bash
+cd target/debug/
+```
 
-11.Now we are ready to start our node , but before it we need to create near acocunt using near rust cli.
+This will init all necessary configs in order to run node locally:
 
-Download and run Near CLI :
+```bash
+./neard init
+```
 
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/near/near-cli-rs/releases/latest/download/near-cli-rs-installer.sh | sh
+This command will run our local node. After we run our node for now we need just to check that all things run and we can shut it down for now, because we need to create some configuration:
 
-After we have CLI we need to setup our cli in order to be able to connect to our local node:
+```bash
+./neard run
+```
 
+As we already downloaded and installed NEAR CLI in Prerequisites, so we have it installed and we can create our configurations.
+
+We need to setup our CLI in order to be able to connect to our local node:
+
+```bash
 cd ~/.config/near-cli
+```
 
+```bash
 nano config.toml
+```
 
-Add this , or if there will be some config - change it to your localhost - http://127.0.0.1:3030
+Add this, or if there will be some config, change it to your localhost - http://127.0.0.1:3030:
 
+```toml
 [network_connection.localnet]
 network_name = "localnet"
 rpc_url = "http://127.0.0.1:3030"
 wallet_url = "https://app.mynearwallet.com/"
 explorer_transaction_url = "https://explorer.near.org/transactions/"
+```
 
+#### 7.6 Create Keys for Smart Contract Manipulation
 
-12.After we init our local node, setup cli in order to call this local node , we will need to take keys in order to sing tx and send it to the local node
+Create keys for smart contract manipulation (deploy, call functions, etc):
 
+```bash
 cd ~/.near/
-
-in this folder we will have the file validator_key.json
-
-We will need to copy all data in new file call test.near.json + we need to add new key "secret_key" with value of private key , it will be necessary for cli in order to sign tx (You can find an example in smartcontract/test-wasm/test.near.json , but there a keys from my local node, pls take it into account), after we will create this file we can tranfer it to our smartcontract/test-wasm folder (take into account that there alredy some keys with the same names - you will need to delete it before moving your keys).
-
-
-13. Test our wasm file
-
-After we have all necessary files inside near-sdk-c-sharp/smartcontract/test-wasm, we can start to test it local 
-
-near --teach-me contract deploy test.near use-file ./new_sharp.wasm with-init-call helloworld json-args {} prepaid-gas '300.0 Tgas' attached-deposit '0 NEAR' network-config localnet sign-with-access-key-file test.near.json send
-
-
-near --teach-me contract call-function as-transaction test.near returnvalue json-args {} prepaid-gas '100.0 Tgas' attached-deposit '0 NEAR' sign-as test.near network-config localnet sign-with-access-key-file test.near.json send
-
 ```
-# Discover Near Blockchain SDK, API which can be helpful in creating SDK on C#
+
+In this folder we will have the file validator_key.json.
+
+We will need to copy all data in new file called test.near.json plus we need to add a new key "private_key" with value of "secret_key". It will be necessary for CLI in order to sign tx. (You can find an example in ContractProof/near_creds/test.near.json, but there are keys from my local node, please take it into account). After we create this file we can transfer it to our smartcontract/test-wasm folder (take into account that there are already some keys with the same names - you will need to delete them before moving your keys).
+
+#### 7.7 Run Our Local Node Again
+
+```bash
+./neard run
 ```
-1. Near core m it's main blockchain node which will process our wasm file 
 
-https://github.com/near/nearcore
+#### 7.8 Deploy Our Smart Contract on the Localchain
 
+```bash
+chmod +x ./scripts/deploy_smart_contract.sh
+```
 
-2. Near SDK JS
-Works in a way when JS -> C -> WASM
+```bash
+./scripts/deploy_smart_contract.sh
+```
 
-https://github.com/near/near-sdk-js/tree/develop
+### 8. Test Smart Contract Using NEAR CLI
 
-https://github.com/near/near-sdk-js/blob/develop/packages/near-sdk-js/builder/builder.c
+Make our test executable. Please make sure you have NEAR CLI installed and test.near.json keys were generated properly with secretKey key where your private key will be.
 
-3.Near SDK RS 
+```bash
+chmod +x ./scripts/test_smart_contract_functions_execution.sh
+```
 
-Compile it using native rust compiler
+Execute our test. Inside tests we have read only (free) transactions, and payable transactions for read and write operations:
 
-https://github.com/near/near-sdk-rs
-
-
+```bash
+./scripts/test_smart_contract_functions_execution.sh
 ```
