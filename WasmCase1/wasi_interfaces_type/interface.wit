@@ -1,0 +1,12 @@
+package smartcontract:component;
+
+world case1 {
+  export read: func(id: u64) -> u64;
+  export write: func(id: u64,value: u64) -> bool;
+
+
+  import env: interface {
+    write-something: func(id: u64,value: u64) -> bool;
+    read-something: func(id: u64) -> u64;
+  }
+}
