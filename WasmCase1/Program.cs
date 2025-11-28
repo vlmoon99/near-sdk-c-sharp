@@ -1,23 +1,39 @@
 ﻿using System;
-using Wasmtime;
+using System.Runtime.InteropServices;
 
-using var engine = new Engine();
+namespace case1
+{
+    public unsafe static class WasmImports
+    {
+        [WasmImportLinkage]
+        [DllImport("env", EntryPoint = "write-something")]
+        public static extern bool WriteSomethingToTheHost(long id, long value);
 
-using var module = Module.FromText(
-    engine,
-    "hello",
-    "(module (func $hello (import \"\" \"hello\")) (func (export \"run\") (call $hello)))"
-);
+        [WasmImportLinkage]
+        [DllImport("env", EntryPoint = "read-something")]
+        public static extern long ReadSomethingFromTheHost(long id);
+    }
 
-using var linker = new Linker(engine);
-using var store = new Store(engine);
+    public unsafe static class ExportFunctions
+    {
+        [UnmanagedCallersOnly(EntryPoint = "read")]
+        public static long Read(long id)
+        {
+            long hostValue = WasmImports.ReadSomethingFromTheHost(id);
 
-linker.Define(
-    "",
-    "hello",
-    Function.FromCallback(store, () => Console.WriteLine("Hello from C#!"))
-);
+            long processed = hostValue * 2 + 10;
 
-var instance = linker.Instantiate(store, module);
-var run = instance.GetAction("run")!;
-run();
+            return processed;
+        }
+
+        [UnmanagedCallersOnly(EntryPoint = "write")]
+        public static bool Write(long id, long value)
+        {
+            long newValue = value + 123;
+
+            bool result = WasmImports.WriteSomethingToTheHost(id, newValue);
+
+            return result;
+        }
+    }
+}
